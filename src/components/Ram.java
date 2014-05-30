@@ -38,7 +38,7 @@ public class Ram {
 		return ret;
 	}
 
-	class InvalidAddressExcption extends Exception{
+	public class InvalidAddressExcption extends Exception{
 		public InvalidAddressExcption(){super();}
 		public InvalidAddressExcption(String message){super(message);}
 	}

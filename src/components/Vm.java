@@ -3,14 +3,15 @@ package components;
 import components.Ram.InvalidAddressExcption;
 
 public class Vm {
-	Register x;
-	Register y;
-	Stack s;
-	ProgramCounter pc;
-	Ram ram;
-	boolean irq1_flag;
-	boolean irq2_flag;
-	boolean halt_flag;
+	public Register x;
+	public Register y;
+	public Stack s;
+	public ProgramCounter pc;
+	public Ram ram;
+	public boolean irq1_flag;
+	public boolean irq2_flag;
+	public boolean halt_flag;
+	boolean jumping = false;
 	
 	public Vm(int memory_size){
 		x = new Register();
@@ -27,6 +28,57 @@ public class Vm {
 		int instruction = ram.read(pc.getAddress());
 		int[] digits = instructionBreakdown(instruction);
 		boolean non_reg_type = nonReg(instruction);
+		int read_digit = digits[0];
+		int write_digit = digits[1];
+		jumping = false;
+		
+		if(irq1_flag){
+			pc.interrupt1();
+			irq1_flag = false;
+			return;
+			}
+		if(irq2_flag){
+			pc.interrupt2();
+			irq2_flag = false;
+			return;
+			}
+		
+		if(!halt_flag){
+			switch (getType(instruction)) {
+			case NOP:
+				break;
+				
+			case MOVE:
+				move(read_digit, write_digit);
+				break;
+	
+			case ARITHMETIC:
+				arithmetic(write_digit, read_digit, digits[2]);
+				break;
+				
+			case LOGICAL:
+				logical(write_digit, read_digit, digits[3]);
+				break;
+			
+			case JUMP:
+				jump(write_digit, read_digit, digits[4], non_reg_type);
+				break;
+			
+			case SPECIAL:
+				special(digits[5]);
+				break;
+			
+			default:
+				break;
+			}
+			if(!jumping){
+				if (non_reg_type) {
+					pc.increment(2);
+				}else{
+					pc.increment(1);
+				}
+			}
+		}
 	}
 	
 	private boolean nonReg(int instruction) throws Exception{
@@ -43,11 +95,12 @@ public class Vm {
 	private int[] instructionBreakdown(int instruction) throws InvalidInstructionException{
 		int[] ret = new int[6];
 		if(instruction < 0 || instruction > 200000){
+			halt_flag = true;
 			throw new InvalidInstructionException("Invalid instruction:" + instruction);
 		}
 		
 		for (int i = 0; i < ret.length; i++) {
-			ret[0] = ((int)(instruction/((int)Math.pow(10, i)))) - ((int)(instruction/((int)Math.pow(10, i+1))*10));
+			ret[i] = ((int)(instruction/((int)Math.pow(10, i)))) - ((int)(instruction/((int)Math.pow(10, i+1))*10));
 		}
 		return ret;
 	}
@@ -66,14 +119,15 @@ public class Vm {
 		}else if(instruction >= Types.SPECIAL.start && instruction <= Types.SPECIAL.end){
 			return Types.SPECIAL;
 		}
-		throw new InvalidInstructionException();
+		halt_flag = true;
+		throw new InvalidInstructionException("Instruction " + instruction + " can't be resolved");
 	}
 	
-	public void move(int source,int destination) throws Exception{
-		writeFromDigit(destination,readFromReadDigit(source));
+	private void move(int read_digit,int write_digit) throws Exception{
+		writeFromDigit(write_digit,readFromReadDigit(read_digit));
 	}
 	
-	public void arithmetic(int write_digit, int read_digit, int type) throws Exception{
+	private void arithmetic(int write_digit, int read_digit, int type) throws Exception{
 		switch (type) {
 		case 1:
 			writeFromDigit(write_digit,readFromWriteDigit(write_digit)+1);
@@ -82,27 +136,28 @@ public class Vm {
 			writeFromDigit(write_digit,readFromWriteDigit(write_digit)-1);
 			break;
 		case 3:
-			s.push(readFromWriteDigit(write_digit) + readFromReadDigit(read_digit));
+			s.push(readFromReadDigit(read_digit) + readFromWriteDigit(write_digit));
 			break;
 		case 4:
-			s.push(readFromWriteDigit(write_digit) - readFromReadDigit(read_digit));
+			s.push(readFromReadDigit(read_digit) - readFromWriteDigit(write_digit));
 			break;
 		case 5:
-			s.push(readFromWriteDigit(write_digit) * readFromReadDigit(read_digit));
+			s.push(readFromReadDigit(read_digit) * readFromWriteDigit(write_digit));
 			break;
 		case 6:
-			s.push(readFromWriteDigit(write_digit) / readFromReadDigit(read_digit));
+			s.push(readFromReadDigit(read_digit) / readFromWriteDigit(write_digit));
 			break;
 		case 7:
-			s.push(readFromWriteDigit(write_digit) % readFromReadDigit(read_digit));
+			s.push(readFromReadDigit(read_digit) % readFromWriteDigit(write_digit));
 			break;
 
 		default:
+			halt_flag = true;
 			throw new InvalidInstructionException("Invalid arithmetic digit: " + type);
 		}
 	}
 	
-	public void logical(int write_digit, int read_digit, int type) throws Exception{
+	private void logical(int write_digit, int read_digit, int type) throws Exception{
 		switch (type) {
 		case 1:
 			if(readFromWriteDigit(write_digit) == readFromReadDigit(read_digit)){
@@ -113,7 +168,7 @@ public class Vm {
 			break;
 			
 		case 2:
-			if(readFromWriteDigit(write_digit) < readFromReadDigit(read_digit)){
+			if(readFromReadDigit(read_digit) < readFromWriteDigit(write_digit)){
 				s.push(1);
 			}else{
 				s.push(0);
@@ -121,7 +176,7 @@ public class Vm {
 			break;
 
 		case 3:
-			if(readFromWriteDigit(write_digit) > readFromReadDigit(read_digit)){
+			if(readFromReadDigit(read_digit) > readFromWriteDigit(write_digit) ){
 				s.push(1);
 			}else{
 				s.push(0);
@@ -137,15 +192,15 @@ public class Vm {
 			break;
 			
 		case 6:
-			s.push(readFromWriteDigit(write_digit) & readFromReadDigit(read_digit));
+			s.push(readFromReadDigit(read_digit) & readFromWriteDigit(write_digit));
 			break;
 			
 		case 7:
-			s.push(readFromWriteDigit(write_digit) | readFromReadDigit(read_digit));
+			s.push(readFromReadDigit(read_digit) | readFromWriteDigit(write_digit));
 			break;
 			
 		case 8:
-			s.push(readFromWriteDigit(write_digit) ^ readFromReadDigit(read_digit));
+			s.push(readFromReadDigit(read_digit) ^ readFromWriteDigit(write_digit));
 			break;
 			
 		case 9:
@@ -153,15 +208,17 @@ public class Vm {
 			break;
 		
 		default:
+			halt_flag = true;
 			throw new InvalidInstructionException("Invalid logic digit: " + type);
 		}
 	}
 
 	//IN THIS FUNCTION CONFUSION IS KING!
-	public void jump(int write_digit, int read_digit, int type,boolean non_reg_type) throws Exception{
+	private void jump(int write_digit, int read_digit, int type,boolean non_reg_type) throws Exception{
 		switch (type) {
 		case 1:
-			pc.jump(readFromReadDigit(read_digit));
+			pc.jump(readFromWriteDigit(write_digit));
+			jumping = true;
 			break;
 		case 2:
 			if(readFromWriteDigit(write_digit) == readFromReadDigit(read_digit)){
@@ -179,7 +236,7 @@ public class Vm {
 			}
 			break;
 		case 3:
-			if(readFromWriteDigit(write_digit) < readFromReadDigit(read_digit)){
+			if(readFromReadDigit(read_digit) < readFromWriteDigit(write_digit)){
 				int next_instruction;
 				if(non_reg_type){
 						next_instruction = ram.read(pc.getAddress()+2);
@@ -194,7 +251,7 @@ public class Vm {
 			}
 			break;
 		case 4:
-			if(readFromWriteDigit(write_digit) > readFromReadDigit(read_digit)){
+			if(readFromReadDigit(read_digit) > readFromWriteDigit(write_digit)){
 				int next_instruction;
 				if(non_reg_type){
 						next_instruction = ram.read(pc.getAddress()+2);
@@ -210,16 +267,20 @@ public class Vm {
 			break;
 		case 5:
 			pc.subroutineJump(readFromReadDigit(read_digit), non_reg_type);
+			jumping = true;
 			break;
 		case 6:
 			pc.returnJump();
+			jumping = true;
 			break;
+			
 		default:
+			halt_flag = true;
 			throw new InvalidInstructionException("Invalid jump digit: " + type);
 		}
 	}
 	
-	public void special(int type) throws Exception{
+	private void special(int type) throws Exception{
 		switch (type) {
 		case 1:
 			halt_flag = true;
@@ -233,12 +294,13 @@ public class Vm {
 			}
 			
 		default:
+			halt_flag = true;
 			throw new InvalidInstructionException("Invalid special digit: " + type);
 		}
 	}
 	
 	
-	public int readFromReadDigit(int d) throws Exception{
+	private int readFromReadDigit(int d) throws Exception{
 		switch (d) {
 		case 0:
 			return x.read();
@@ -262,11 +324,12 @@ public class Vm {
 			return ram.read(pc.getAddress()+1);
 
 		default:
+			halt_flag = true;
 			throw new InvalidInstructionException("Invalid read digit: " + d);
 		}
 	}
 	
-	public int readFromWriteDigit(int d) throws Exception{
+	private int readFromWriteDigit(int d) throws Exception{
 		switch (d) {
 		case 0:
 			return x.read();
@@ -290,11 +353,12 @@ public class Vm {
 			return ram.read(pc.getAddress()+1);
 
 		default:
+			halt_flag = true;
 			throw new InvalidInstructionException("Invalid write digit (for reading): " + d);
 		}
 	}
 	
-	public void writeFromDigit(int d,int n) throws Exception{
+	private void writeFromDigit(int d,int n) throws Exception{
 		switch (d) {
 		case 0:
 			x.write(n);
@@ -329,6 +393,7 @@ public class Vm {
 			break;
 
 		default:
+			halt_flag = true;
 			throw new InvalidInstructionException("Invalid write digit (for reading): " + d);
 		}
 	}
@@ -342,7 +407,7 @@ public class Vm {
 	
 	
 	public enum Types {
-		NOP(0,0), MOVE(1,76), ARITHMETIC(100,776), LOGICAL(1000,9076), JUMP(10000,70000), SPECIAL(100000,20000);
+		NOP(0,0), MOVE(1,76), ARITHMETIC(100,786), LOGICAL(1000,9076), JUMP(10000,70000), SPECIAL(100000,200000);
 		final int start;
 		final int end;
 		Types(int start, int end){
@@ -351,5 +416,24 @@ public class Vm {
 		}
 	}
 	
+	public void print() throws InvalidAddressExcption{
+		String s;
+
+			s = ""
+					+ "\n"
+					+ "Address Pointer: " + pc.getAddress()+"\n"
+					+ "Current instruction: " + ram.read(pc.getAddress()) +"\n"
+					+ "Register X: " + x.read()+"\n"
+					+ "Register Y: " + y.read()+"\n"
+					+ "::::STACK::::"+"\n";
+
+		int[] stack = this.s.toArray();
+		for (int i = stack.length-1; i >= 0; i--) {
+			s += stack[i] + "\n";
+		}
+		s +=  ":::::::::::::"+"\n";
+		
+		System.out.println(s);
+	}
 	
 }
