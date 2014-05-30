@@ -1,0 +1,242 @@
+\documentclass{article}
+\usepackage{amsmath}
+\usepackage{listings}  
+\usepackage{verbatim}
+\newcommand{\x}{$\textbf{X}$}
+\newcommand{\y}{$\textbf{Y}$}
+\newcommand{\s}{$\textbf{S}$}
+\newcommand{\A}{$\textbf{A}$}
+\newcommand{\mx}{$\textbf{M}_{\textbf{X}}$}
+\newcommand{\my}{$\textbf{M}_{\textbf{Y}}$}
+\newcommand{\ma}{$\textbf{M}_{\textbf{A}}$}
+\newcommand{\q}{$\textbf{Q}_{\textbf{1}}$}
+\newcommand{\qq}{$\textbf{Q}_{\textbf{2}}$}
+\newcommand{\pc}{$\textbf{PC}$}
+\newcommand{\J}{$\textbf{J}$}
+\newcommand{\V}{\verb}
+
+\title{Specs for a lame VM implemented in SML}
+
+
+\begin{document}
+\maketitle
+This VM is a very simple and minimalistic machine. It has an memory of
+arbitrary size which is specified at run-time. The memory works with signed
+integers of arbitrary size as words. The VM is asynchronous and each operation
+takes one step.
+\section{Structure}
+The VM consists of 9 components. Two general purpouse registers(\x \ , \y ), one
+general purpose stack (\s), One virtual read only register (\A), One jump stack
+\J, Two IRQ adress registers (\q \ , \qq), One ``ALU'', One program counter
+(\pc) and of course a random acces memory.
+
+\subsection{The general purpose registers}
+The two general purpose registers \x \ and \y \ are both capable of being used
+for all arithmetic operations and their values can also be used as addresses.
+These two registers can be incremented and decremented.
+
+\subsection{The stack}
+The stack \s \ is a standard LIFO stack of unlimited size. The stack can not be
+used for adressing. One can not read the top of the stack without popping it. If
+one tries to get a value from an empty stack an exception will be raised and the
+VM must halt.
+
+\subsection{The Argument Register}
+Now this is just a virtual read only register. The argument \A \  is only
+accesible if the instruction being executed takes a predefined argument. The
+argument will be the value of the memory location after the location at which
+the \pc \  is currently pointing. No well formed instruction should refere to
+\A \ unless it is supposed to.
+
+\subsection{The Jump Stack}
+The jump stack \J \ is not accesible by anything besides the \pc. The program
+counter is of infinite size. The jump stack is responsible for keeping track
+of the return address when a subroutine is performed. Every time someone
+issues a subroutine jump the current address will be pushed onto the stack.
+When a return jump is issued \J \ gets popped and its value gets assigned to
+the \pc. The top entry on the stack can not be accsessed without popping the
+stack.
+If someone tries to execute a return jump if the jump stack is empty a exception 
+shall be raised and the VM must crash.
+
+\subsection{The IRQ registers}
+The IRQ registers \q \ and \qq \ are two pointers to the memory. These are two
+write only registers and can only be read by the \pc. The IRQ registers can be
+assigned values like all the other registers.  If a interrupt is issued the \pc
+\ will be assigned to the value of the corresponding IRQ register and the current
+value of the \pc \ will be pushed onto \J.
+
+\subsection{RAM}
+The RAM in this machine works pretty much like any other random access
+memory.\\
+The RAM is devided into three part. There are some special cells with negative
+addresses. These addresses are read only and contain information regarding the
+layout of the memory. Any write to these special locations will result in the
+VM crashing. The main part of the RAM is then sectioned in two two parts. One
+``ordinary'' part and one external part. Prepherial components such as I/O
+handlers and such can only accsess the external memory.\\
+The two special addresses are -1 where the size of the entire memory is stored
+and -2 stores the address at which the external memory start.
+
+\section{ISA}
+Every opcode is represented by a integer where each digit provides
+information about what the VM is to do in that step. The digits are from right
+to left as follows.
+
+\begin{description}
+  \item[First] Read location
+  \item[Second] Write location
+  \item[Third] Arithmetic operations
+  \item[Fourth] Logic operations
+  \item[Fifth] Jump operations
+  \item[Sixth] Special
+\end{description}
+Below is a table describing what each digit value corresponds to:
+\begin{center}
+\begin{tabular}{l || *{10}{c |}}
+Value & 0 & 1 & 2 & 3 & 4 & 5 & 6 & 7 & 8 & 9 \\
+\hline
+Read & \x & \y & \s  &\mx & \my & \ma & \A & & & \\
+
+Write & \x & \y & \s  &\mx & \my & \ma & \q& \qq & \A &\\
+
+Arit &  & $++$ & $--$ & $+$ & $-$ & $\star$ & $\div$ & \%  &  & \\
+
+Logic &  &  $=$ & $<$ & $>$ & $<<$ & $>>$ & and & or & xor & not\\
+
+Jump & & J & J_{=} & J_{<} & J_{>} & J_{SR} & Ret & & & \\
+
+Special & & H & Se &  &  &  &  &  &  &  \\	
+\end{tabular}
+\end{center}
+Here \mx , \my and \ma is to be read as address of \x , \y \ and \A.  All
+arithmetic and logic operations operations writes their output to the stack.\\
+Here some examples follows:\\
+\verb+000042+ $\rightarrow$ Move value at \s \ to memory cell at the address
+stored in \y. \\
+\verb+000401+ $\rightarrow$ Get \x \ mod \y \ and write result to \s \\
+\verb+020046+ $\rightarrow$ Skip next instruction if \my \ is equal to \A \\
+\newpage
+
+First i would like to  mention that
+\verb+000000+ will be the \verb+NOP+ operation since it would translate to just
+moving \x \ to \x \ . 
+We can now group the instructions in to numerical ranges:
+
+\begin{tabular}{l l}
+  \V+000000+ & \V+NOP+ \\
+  \hline
+  \V+000001-000076+ & Move operations \\
+  \hline
+  \V+000100-000776+ & Arithmetic operations \\
+  \hline
+  \V+001000-009076+ & Logic operations \\
+  \hline
+  \V+010000-070000+ & Jump operations \\
+  \hline
+  \V+100000-200000+ & Special \\
+\end{tabular} \\
+As is apparent from this list many values would yield invalid or
+nonsense operations.
+The instruction decoder must take this into consideration.
+
+Below will follow specifications for all the instruction types.
+
+\subsection{Instruction types}
+Every instruction will take exactly one cycle. Almost every instruction needs
+only one memory cell and should increment the \pc \  by one.
+Any operation using  a argument i.e \A \ will occupy two memory cells and
+increment the \pc \ by two.\\
+Using jump operations may affect the \pc in other ways.
+No operation except moves to the IRQ registers (\q \ and \qq ) are allowed.
+If any other operation where to try to access the IRQ registers the opcode is
+invalid and the VM should crash.
+
+\subsubsection{Move operations}
+The only invalid move operations are those where the second digit is a 8 since
+one can not write to \A.
+Although some are nonsensical such as \V+000011+ since it would move \y \ to \y \ .
+
+\subsubsection{Arithmetic operations}
+The increment($++$) and decrement($--$) operations only take one write argument
+and the read argument should be ignored. Incrementing or decrementing a register
+or memory cell updates the value stored in that registry directly and does not
+affect any thing else.\\
+The other arithmetic operations takes the write digit as the first argument to
+the operation and the write operation will be the second argument.
+The result of the operation is always stored on the stack.\\
+If one tries division by zero a exception should be thrown and the VM shall 
+crash.
+
+\subsubsection{Logic operations}
+The logic operations work in the same way as the arithmetic operations. The
+comparison operations will return 0 if the result is false and 1 otherwise.
+Any logic operation where the 3:d digit is non zero is an illegal instruction
+and a exception should be thrown and the VM shall crash.
+
+\subsubsection{Jump operations}
+The standard address jump (J) will jump the \pc \ to the address given by its
+read digit.\\
+The conditional jumps takes the write digit as its first argument and the read
+digit as its second argument. If the condition fails met the \pc \ will be
+incremented by 1 (or 2 if \A \ is used) otherwise the \pc \ will be incremented
+by 2 (or 3 if \A \ is used). I.e if the condition holds the normal flow of the
+program will be altered.\\
+A $JSR$ (subroutine jump) will take a argument in \A \ and move the \pc \
+there and it will also put its current value on \J.\\
+A return jump will jump to the address at the top of \J \ and then pop the
+stack.If the jump where to be empty the VM should crash and an exception
+should be raised.\\
+For all jump operations the third and fourth digit must be 0 or the instruction
+is invalid and the VM should crash. The first and second digit will be ignored
+if they are not used.
+
+\subsubsection{Special}
+The two special operations exist. The Halt operation which just stops the VM and
+raises an exception.
+An the Se or Stack empty operation which returns 1 if the stack is empty and 0
+else.
+
+\subsection{Opcodes}
+
+\begin{tabular}{l || c | *{7}{c|} | r}
+\textbf{Mnemonic} & \textbf{Description} & \x & \y& \s & \A &\ma & \mx & \my &
+Args
+\\
+\hline
+\V+NOP+ & No Operation & x & x & x & x & x & x & x & 0  \\
+\hline
+\V+MOV+ & Move operations & b & b & b & r & b & b & b & 2 \\
+\hline
+\V+INC+ & Increment& b & b & x & x & x & x & x & 1 \\
+\V+DEC+ & Decrement	& b & b & x & x & x & x & x & 1 \\
+\V+ADD+ & Add		& r & r & w & r & r & r & r & 2 \\
+\V+SUB+ & Subtract	& r & r & w & r & r & r & r & 2 \\
+\V+MUL+ & Multiply	& r & r & w & r & r & r & r & 2 \\
+\V+DIV+ & Division	& r & r & w & r & r & r & r & 2 \\
+\V+MOD+ & Modulus	& r & r & w & r & r & r & r & 2 \\
+\hline
+\V+EQL+ & Equal		& r & r & w & r & r & r & r & 2 \\
+\V+LES+ & Less		& r & r & w & r & r & r & r & 2 \\
+\V+GRT+ & Greater	& r & r & w & r & r & r & r & 2 \\
+\V+BRR+ & Rotate R	& r & r & w & r & r & r & r & 1 \\
+\V+BRL+ & Rotate L	& r & r & w & r & r & r & r & 1 \\
+\V+AND+ & And		& r & r & w & r & r & r & r & 2 \\
+\V+ORR+ & Or 		& r & r & w & r & r & r & r & 2 \\
+\V+XOR+ & Xor		& r & r & w & r & r & r & r & 2 \\
+\V+NOT+ & Not		& r & r & w & r & r & r & r & 2 \\
+\hline
+\V+JMP+ & Jump		& r & r & x & r & r & r & r & 1 \\
+\V+BEQ+ & Break Equal& r & r & x & r & r & r & r & 2 \\
+\V+BLE+ & Break Less	& r & r & x & r & r & r & r & 2 \\
+\V+BGR+ & Break Greater& r & r & x & r & r & r & r & 2 \\
+\V+JSR+ & Subroutine Jump& r & r & x & r & r & r & r & 1 \\
+\V+RET+ & Return Jump& x & x & x & x & x & x & x & 0 \\
+\V+JSE+ & Jump Stack Empty& x & x & w & x & x & x & x & 0 \\
+\hline
+\V+HLT+ & HALT& x & x & x & x & x & x & x & 0 \\
+\V+SEM+ & Stack Empty& x & x & w & x & x & x & x & 0 \\
+\end{tabular}
+
+
+\end{document}
