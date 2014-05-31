@@ -49,29 +49,57 @@ public class Vm {
 				break;
 				
 			case MOVE:
-				move(read_digit, write_digit);
+				try {
+					move(read_digit, write_digit);
+				} catch (Exception e) {
+					halt_flag = true;
+					e.printStackTrace();
+				}
+				
 				break;
 	
 			case ARITHMETIC:
-				arithmetic(write_digit, read_digit, digits[2]);
+				try {
+					arithmetic(write_digit, read_digit, digits[2]);
+				}catch (Exception e){
+					halt_flag = true;
+					e.printStackTrace();
+				}
 				break;
 				
 			case LOGICAL:
-				logical(write_digit, read_digit, digits[3]);
+				try {
+					logical(write_digit, read_digit, digits[3]);
+				} catch (Exception e) {
+					halt_flag = true;
+					e.printStackTrace();
+				}
 				break;
 			
 			case JUMP:
-				jump(write_digit, read_digit, digits[4], non_reg_type);
+				try {
+					jump(write_digit, read_digit, digits[4], non_reg_type);
+				} catch (Exception e) {
+					halt_flag = true;
+					e.printStackTrace();
+				}
+				
 				break;
 			
 			case SPECIAL:
-				special(digits[5]);
+				try {
+					special(digits[5]);
+				} catch (Exception e) {
+					halt_flag = true;
+					e.printStackTrace();
+				}
+				
 				break;
 			
 			default:
 				break;
 			}
-			if(!jumping){
+			if(!jumping && !halt_flag){
 				if (non_reg_type) {
 					pc.increment(2);
 				}else{
@@ -83,8 +111,8 @@ public class Vm {
 	
 	private boolean nonReg(int instruction) throws Exception{
 		int[] digits = instructionBreakdown(instruction);
-		if(digits[0] == 6 || digits[0] == 4 || digits[0] == 5 ||digits[1] == 8 ||
-				digits[1] == 4 || digits[1] == 5){
+		if(digits[0] == 6  || digits[0] == 5 ||digits[1] == 8
+				 || digits[1] == 5){
 			return true;
 		}else{
 			return false;
@@ -224,7 +252,7 @@ public class Vm {
 			if(readFromWriteDigit(write_digit) == readFromReadDigit(read_digit)){
 				int next_instruction;
 				if(non_reg_type){
-						next_instruction = ram.read(pc.getAddress()+2);
+					next_instruction = ram.read(pc.getAddress()+2);
 				}else{
 					next_instruction = ram.read(pc.getAddress()+1);
 				}
@@ -266,7 +294,7 @@ public class Vm {
 			}
 			break;
 		case 5:
-			pc.subroutineJump(readFromReadDigit(read_digit), non_reg_type);
+			pc.subroutineJump(readFromWriteDigit(write_digit), non_reg_type);
 			jumping = true;
 			break;
 		case 6:
@@ -318,6 +346,7 @@ public class Vm {
 			return ram.read(y.read());
 			
 		case 5:
+			
 			return ram.read(ram.read(pc.getAddress()+1));
 			
 		case 6:
@@ -420,7 +449,6 @@ public class Vm {
 		String s;
 
 			s = ""
-					+ "\n"
 					+ "Address Pointer: " + pc.getAddress()+"\n"
 					+ "Current instruction: " + ram.read(pc.getAddress()) +"\n"
 					+ "Register X: " + x.read()+"\n"

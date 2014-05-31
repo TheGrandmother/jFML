@@ -43,4 +43,48 @@ public class Ram {
 		public InvalidAddressExcption(String message){super(message);}
 	}
 	
+	public void dumpRam(){
+		String s = "";
+		int i = 0;
+		while(i < ram.length){
+			s += i +":::";
+			for (int j = 0; j < 10; j++) {
+				s += ram[i+j] + ":";  
+			}
+			s += "\n";
+			i += 10;
+		}
+		if( i != ram.length){
+			s += i +"::: ";
+			for (int j = i; j < ram.length; j++) {
+				s += ram[j] + ":";
+			}
+			s += "\n";
+		}
+		System.out.println(s);
+	}
+	
+	public void dumpRam(int start, int end) throws InvalidAddressExcption{
+		if(end > ram.length){throw new InvalidAddressExcption("Ending adress is outside of the ram.");}
+		String s = "";
+		int i = start;
+		
+		while(i < end){
+			s += i +":::";
+			for (int j = 0; j < 10; j++) {
+				s += ram[i+j] + ":";  
+			}
+			s += "\n";
+			i += 10;
+		}
+		if( i != end){
+			s += i +"::: ";
+			for (int j = i; j < ram.length; j++) {
+				s += ram[j] + ":";
+			}
+			s += "\n";
+		}
+		System.out.println(s);
+	}
+	
 }

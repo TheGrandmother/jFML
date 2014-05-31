@@ -16,7 +16,7 @@ public class FML {
 		
 		BufferedReader reader = new BufferedReader(new FileReader("out.fml"));
 		
-		Vm vm = new Vm(100);
+		Vm vm = new Vm(100_000);
 		
 		int start_address = (int)Integer.parseInt(reader.readLine());
 		String s;
@@ -34,22 +34,27 @@ public class FML {
 			}
 		}
 		
-		System.out.println(vm.halt_flag);
+		int cycles= 0;
+		
 		vm.halt_flag = false;
 		long time;
 		while(!vm.halt_flag){
 			time = System.currentTimeMillis();
-			vm.print();
+			//vm.print();
 			try {
 				vm.step();
+				cycles++;
 			} catch (Exception e) {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
+				vm.print();
 			}
-			while(System.currentTimeMillis() - time < 10){}
+			while(System.currentTimeMillis() - time < 0){}
 			
 		}
+		vm.ram.dumpRam(45000,60000);
 		vm.print();
+		System.out.println("Halted in " + cycles + " cycles");
 		
 	}
 
