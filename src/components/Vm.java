@@ -12,6 +12,7 @@ public class Vm {
 	public boolean irq2_flag;
 	public boolean halt_flag;
 	boolean jumping = false;
+	public long cycles;
 	
 	public Vm(int memory_size){
 		x = new Register();
@@ -22,10 +23,19 @@ public class Vm {
 		irq1_flag = false;
 		irq2_flag = false;
 		halt_flag = true;
+		cycles = 0;
 	}
 	
 	public void step() throws Exception{
-		int instruction = ram.read(pc.getAddress());
+		int instruction =-1;
+		try {
+			instruction = ram.read(pc.getAddress());
+		} catch (Exception e) {
+			e.printStackTrace();
+			halt_flag = true;
+			return;
+		}
+		
 		int[] digits = instructionBreakdown(instruction);
 		boolean non_reg_type = nonReg(instruction);
 		int read_digit = digits[0];
@@ -106,7 +116,9 @@ public class Vm {
 					pc.increment(1);
 				}
 			}
+			cycles++;
 		}
+
 	}
 	
 	private boolean nonReg(int instruction) throws Exception{
