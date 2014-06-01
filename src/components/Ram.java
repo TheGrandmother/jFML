@@ -87,4 +87,27 @@ public class Ram {
 		System.out.println(s);
 	}
 	
+	public String toString(int start, int end,int cells_per_line) throws InvalidAddressExcption{
+		if(end > ram.length){throw new InvalidAddressExcption("Ending adress is outside of the ram.");}
+		String s = "";
+		int i = start;
+		
+		while(i < end){
+			s += i +":::";
+			for (int j = 0; j < cells_per_line; j++) {
+				s += ram[i+j] + ":";  
+			}
+			s += "\n";
+			i += cells_per_line;
+		}
+		if( i != end){
+			s += i +"::: ";
+			for (int j = i; j < ram.length; j++) {
+				s += ram[j] + ":";
+			}
+			s += "\n";
+		}
+		return s;
+	}
+	
 }

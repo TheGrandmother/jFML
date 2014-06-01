@@ -160,7 +160,7 @@ public class Vm {
 			return Types.SPECIAL;
 		}
 		halt_flag = true;
-		throw new InvalidInstructionException("Instruction " + instruction + " can't be resolved");
+		throw new InvalidInstructionException("Instruction " + instruction + " can't be resolved \n"+ "At address " + pc.getAddress());
 	}
 	
 	private void move(int read_digit,int write_digit) throws Exception{

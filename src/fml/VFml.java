@@ -6,6 +6,7 @@ import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.GridBagLayout;
 import java.awt.GridLayout;
+import java.awt.HeadlessException;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.io.BufferedReader;
@@ -16,6 +17,7 @@ import javax.swing.BoxLayout;
 import javax.swing.JButton;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
+import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JSeparator;
 import javax.swing.JTextField;
@@ -33,6 +35,7 @@ public class VFml extends JFrame implements ActionListener{
 	Screen screen;
 	int screen_start = 80000;
 	int screen_end = 90000;
+	int update_bit = 90001;
 	
 	
 	boolean tick_once = false;
@@ -46,6 +49,7 @@ public class VFml extends JFrame implements ActionListener{
 	JToggleButton run = new JToggleButton("Run");
 	JButton step = new JButton("Step");
 	JButton reset = new JButton("Reset");
+	JButton standard = new JButton("Load out.fml");
 	JTextField in_file = new JTextField("Input File");
 	JLabel halt_label = new JLabel("Halt Flag: ");
 	JLabel halt_flag_value = new JLabel("void");
@@ -64,7 +68,17 @@ public class VFml extends JFrame implements ActionListener{
 	JLabel inst_value = new JLabel("void");
 	JLabel cycles = new JLabel("Cycles: ");
 	JLabel cycles_value = new JLabel("void");
+	JLabel stack_size = new JLabel("Stack size: ");
+	JLabel stack_size_value = new JLabel("void");
 	
+	
+	JTextField dump_start = new JTextField("Dump start");
+	JTextField dump_end = new JTextField("Dump end");
+	JButton dump = new JButton("Dump");
+	JButton force_update = new JButton("Force screen update");
+	
+	long time;
+	int screen_update_time;
 	
 	
 	public static void main(String[] args) {
@@ -75,37 +89,48 @@ public class VFml extends JFrame implements ActionListener{
 		v.pack();
 		v.fillLabels();
 		v.vm.halt_flag = false;
-		long time =System.currentTimeMillis();
+		
+		
 		while(true){
 			if(v.running || v.tick_once){
 				
 				try {
 					v.vm.step();
+					v.updateScreen();
 				} catch (Exception e) {
-					// TODO Auto-generated catch block
-					e.printStackTrace();
+					JOptionPane.showMessageDialog(v.big, "Error: \n" +e.toString());
+					v.running = false;
 				}
-				//time = System.currentTimeMillis();
-				v.waitFor(0);
-				//while(System.currentTimeMillis()-time < 0){};
-				v.populateScreen();
-				v.screen.repaint();
+				
+				
 				v.fillLabels();
+				
 
 			}
+
 			if(v.tick_once){
 				v.tick_once = false;
 			}
-			
-
-			
 		}
 		
-		
-		
-		
-		
-
+	}
+	public void anoyMe(){
+		System.out.println("why u no work");
+	}
+	
+	public void updateScreen(){
+		try {
+			if(vm.ram.read(update_bit) == 1){
+				populateScreen();
+				screen.drawScreen();
+				screen.paint(screen.getGraphics());
+				screen.repaint();
+				vm.ram.write(0, update_bit);
+			}
+		} catch (InvalidAddressExcption e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
 	}
 	
 	public void waitFor(int n){
@@ -115,7 +140,12 @@ public class VFml extends JFrame implements ActionListener{
 	
 	public VFml(){
 		super();
+		time = System.currentTimeMillis();
+		screen_update_time = 50;
 		screen = new Screen(100,100,2);
+		populateScreen();
+		screen.drawScreen();
+		screen.repaint();
 		System.setProperty("awt.useSystemAAFontSettings","on");
 		System.setProperty("swing.aatext", "true");
 		setSize(750,500);
@@ -129,12 +159,24 @@ public class VFml extends JFrame implements ActionListener{
 		reset.setActionCommand("Reset");
 		in_file.addActionListener(this);
 		in_file.setActionCommand("Input File");
+		dump.addActionListener(this);
+		dump.setActionCommand("Dump");
+		force_update.addActionListener(this);
+		force_update.setActionCommand("Force");
+		standard.addActionListener(this);
+		standard.setActionCommand("Standard");
 
 		settings.setLayout(new BoxLayout(settings, BoxLayout.PAGE_AXIS));
 		settings.add(run);
 		settings.add(step);
 		settings.add(reset);
+		settings.add(standard);
 		settings.add(in_file);
+		settings.add(dump);
+		settings.add(dump_start);
+		settings.add(dump_end);
+		settings.add(force_update);
+		
 		
 		stats.setLayout(new GridLayout(0, 2));
 		stats.setBorder(BorderFactory.createLineBorder(Color.gray,1));
@@ -148,6 +190,8 @@ public class VFml extends JFrame implements ActionListener{
 		stats.add(x_reg_value);
 		stats.add(y_reg);
 		stats.add(y_reg_value);
+		stats.add(stack_size);
+		stats.add(stack_size_value);
 		stats.add(new JLabel());
 		stats.add(new JLabel());
 //		stats.add(pc_label);
@@ -177,6 +221,8 @@ public class VFml extends JFrame implements ActionListener{
 		x_reg_value.setText(""+vm.x.read());
 		y_reg_value.setText(""+vm.y.read());
 		addr_value.setText(""+vm.pc.getAddress());
+		stack_size_value.setText(""+vm.s.getSize());
+		
 		try {
 			inst_value.setText(""+vm.ram.read(vm.pc.getAddress()));
 		} catch (InvalidAddressExcption e) {
@@ -206,14 +252,13 @@ public class VFml extends JFrame implements ActionListener{
 	public void actionPerformed(ActionEvent e){
 		switch (e.getActionCommand()) {
 		case "Input File":
-			
 			try {
-				BufferedReader reader = new BufferedReader(new FileReader("out.fml"));
+				BufferedReader reader = new BufferedReader(new FileReader(in_file.getText()),10000);
 				int start_address = (int)Integer.parseInt(reader.readLine());
 				String s;
 				int i = 0;
 				while((s = reader.readLine()) != null){
-					
+					s = s.replace("~", "-"); //This needs to be here due to the fact that fucking SML uses ~ to denote negative numbers
 					vm.ram.write((int)Integer.parseInt(s), start_address+i);
 					i++;
 				}
@@ -225,7 +270,11 @@ public class VFml extends JFrame implements ActionListener{
 			break;
 		
 		case "Run":
-			running = true;
+			if(running){
+				running = false;
+			}else{
+				running = true;
+			}
 			break;
 		
 		case "Reset":
@@ -236,6 +285,41 @@ public class VFml extends JFrame implements ActionListener{
 		
 		case "Step":
 			tick_once =true;
+			break;
+		
+		case "Dump":
+			//System.out.println(dump_start.getText());
+			try {
+				JOptionPane.showMessageDialog(big, vm.ram.toString(Integer.parseInt(dump_start.getText()),Integer.parseInt(dump_end.getText()),100));
+			} catch (Exception e1) {
+				JOptionPane.showMessageDialog(big, "Error: \n" +e1.toString());
+				
+			}
+			break;
+			
+		case "Force":
+			populateScreen();
+			screen.drawScreen();
+			screen.repaint();
+			break;
+		
+		case "Standard":
+			try {
+				BufferedReader reader = new BufferedReader(new FileReader("out.fml"),100000);
+				reader.mark(100000);
+				int start_address = (int)Integer.parseInt(reader.readLine());
+				String s;
+				int i = 0;
+				while((s = reader.readLine()) != null){
+					s = s.replace("~", "-");
+					vm.ram.write((int)Integer.parseInt(s), start_address+i);
+			
+					i++;
+				}
+				reader.close();
+			} catch (Exception e2) {
+				JOptionPane.showMessageDialog(big, "Error: \n" +e2.toString());
+			}
 			break;
 		
 		default:
