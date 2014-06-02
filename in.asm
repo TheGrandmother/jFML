@@ -7,19 +7,19 @@ MOV 90000 x
 MOV x $screen_end
 
 @random
-MOV 153148 x
+MOV 342 x
 MOV x $random
 @rng_modulo
-MOV 147483647 x
+MOV 147483613 x
 MOV x $rng_modulo
 @rng_multiplier
-MOV 48271 x
+MOV 4824871 x
 MOV x $rng_multiplier
 @rng_increment
-MOV 0 x
+MOV 72 x
 MOV x $rng_increment
 @wait_constant
-MOV 100 x
+MOV 1 x
 MOV x $wait_constant
 @update_bit
 MOV 90001 x
@@ -108,7 +108,7 @@ ADD s x
 ADD $screen_start s
 MOV s y
 MOV $y s
-ADD s 10
+ADD s 4
 MOV s $y
 RET
 

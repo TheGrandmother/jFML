@@ -67,12 +67,12 @@ public class Screen extends Canvas {
 		
 		if(buffer == 0){
 			BufferedImage rescaled = new BufferedImage(width*size,height*size,BufferedImage.TYPE_INT_ARGB);
-			rescaled.getGraphics().drawImage(buffer1, 0, 0, width*size, height*size, null);
+			rescaled.getGraphics().drawImage(buffer2, 0, 0, width*size, height*size, null);
 			g2.drawImage( rescaled, null, 0, 0);
 			g2.dispose();
 		}else{
 			BufferedImage rescaled = new BufferedImage(width*size,height*size,BufferedImage.TYPE_INT_ARGB);
-			rescaled.getGraphics().drawImage(buffer2, 0, 0, width*size, height*size, null);
+			rescaled.getGraphics().drawImage(buffer1, 0, 0, width*size, height*size, null);
 			g2.drawImage( rescaled, null, 0, 0);
 			g2.dispose();
 		}
@@ -86,11 +86,11 @@ public class Screen extends Canvas {
 	public void flip(){
 		if(buffer == 0){
 			g.dispose();
-			g = (Graphics2D) buffer1.getGraphics();
+			g = (Graphics2D) buffer2.getGraphics();
 			buffer = 1;
 		}else{
 			g.dispose();
-			g = (Graphics2D) buffer2.getGraphics();
+			g = (Graphics2D) buffer1.getGraphics();
 			buffer = 0;
 		}
 	}

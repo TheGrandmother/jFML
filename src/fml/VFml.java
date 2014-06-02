@@ -45,6 +45,7 @@ public class VFml extends JFrame implements ActionListener{
 	JPanel big = new JPanel();
 	JPanel settings = new JPanel();
 	JPanel stats = new JPanel();
+	JFrame thing = new JFrame();
 	
 	JToggleButton run = new JToggleButton("Run");
 	JButton step = new JButton("Step");
@@ -120,12 +121,13 @@ public class VFml extends JFrame implements ActionListener{
 	
 	public void updateScreen(){
 		try {
-			if(vm.ram.read(update_bit) == 1){
+			if(vm.ram.read(update_bit) == 1 && (System.currentTimeMillis()-time > 10)){
 				populateScreen();
 				screen.drawScreen();
 				screen.paint(screen.getGraphics());
-				screen.repaint();
+				//screen.repaint();
 				vm.ram.write(0, update_bit);
+				time = System.currentTimeMillis();
 			}
 		} catch (InvalidAddressExcption e) {
 			// TODO Auto-generated catch block
@@ -142,7 +144,7 @@ public class VFml extends JFrame implements ActionListener{
 		super();
 		time = System.currentTimeMillis();
 		screen_update_time = 50;
-		screen = new Screen(100,100,2);
+		screen = new Screen(100,100,3);
 		populateScreen();
 		screen.drawScreen();
 		screen.repaint();
@@ -208,6 +210,9 @@ public class VFml extends JFrame implements ActionListener{
 
 		big.add(stats);
 		big.add(screen);
+		thing.setSize(screen.width*screen.size,screen.height*screen.size);
+		thing.add(screen);
+		thing.setVisible(true);
 		populateScreen();
 		add(big);
 		settings.setVisible(true);
