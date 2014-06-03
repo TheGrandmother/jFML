@@ -44,10 +44,16 @@ public class Screen extends Canvas {
 	public void setBitmap(int[] bitmap){
 		int[] temp = new int[bitmap.length*3];
 		int j = 0;
+		int color = 0;
 		for (int i = 0; i < bitmap.length; i++) {
-			temp[j] = (int)((((double)bitmap[i])/255) * Integer.MAX_VALUE); 
-			temp[j+1] = (int)((((double)bitmap[i])/255) * Integer.MAX_VALUE);
-			temp[j+2] = (int)((((double)bitmap[i])/255) * Integer.MAX_VALUE);
+			if(bitmap[i] > 255){
+				color = 0x00FF_FFFF;
+			}else{
+				color =  (int)((((double)bitmap[i])/((double)255))*0x00FF_FFFF);
+			}
+			temp[j] =    color; 
+			temp[j+1] = color  ;
+			temp[j+2] = color ;
 
 			j += 3; 
 		}

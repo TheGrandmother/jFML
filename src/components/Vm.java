@@ -13,7 +13,9 @@ public class Vm {
 	public boolean halt_flag;
 	boolean jumping = false;
 	public long cycles;
-	
+	public long[][] timers = new long[5][2];
+	long time = 0;
+	 
 	public Vm(int memory_size){
 		x = new Register();
 		y = new Register();
@@ -24,7 +26,13 @@ public class Vm {
 		irq2_flag = false;
 		halt_flag = true;
 		cycles = 0;
-	}
+		timers[0][1] =1;
+		timers[1][1] =1;
+		timers[2][1] =1;
+		timers[3][1] =1;
+		timers[4][1] =1;
+		
+	} 
 	
 	public void step() throws Exception{
 		int instruction =-1;
@@ -59,50 +67,64 @@ public class Vm {
 				break;
 				
 			case MOVE:
+				time = System.nanoTime();
 				try {
 					move(read_digit, write_digit);
 				} catch (Exception e) {
 					halt_flag = true;
 					e.printStackTrace();
 				}
+				timers[0][0] += System.nanoTime() -time;
+				timers[0][1] ++;
 				
 				break;
 	
 			case ARITHMETIC:
+				time = System.nanoTime();
 				try {
 					arithmetic(write_digit, read_digit, digits[2]);
 				}catch (Exception e){
 					halt_flag = true;
-					e.printStackTrace();
+					throw new Exception(e.getMessage());
 				}
+				timers[1][0] += System.nanoTime() -time;
+				timers[1][1] ++;
 				break;
 				
 			case LOGICAL:
+				time = System.nanoTime();
 				try {
 					logical(write_digit, read_digit, digits[3]);
 				} catch (Exception e) {
 					halt_flag = true;
-					e.printStackTrace();
+					throw new Exception(e.getMessage());
 				}
+				timers[2][0] += System.nanoTime() -time;
+				timers[2][1] ++;
 				break;
 			
 			case JUMP:
+				time = System.nanoTime();
 				try {
 					jump(write_digit, read_digit, digits[4], non_reg_type);
 				} catch (Exception e) {
 					halt_flag = true;
-					e.printStackTrace();
+					throw new Exception(e.getMessage());
 				}
-				
+				timers[3][0] += System.nanoTime() -time;
+				timers[3][1] ++;
 				break;
 			
 			case SPECIAL:
+				time = System.nanoTime();
 				try {
 					special(digits[5]);
 				} catch (Exception e) {
 					halt_flag = true;
-					e.printStackTrace();
+					throw new Exception(e.getMessage());
 				}
+				timers[4][0] += System.nanoTime() -time;
+				timers[4][1] ++;
 				
 				break;
 			
@@ -132,18 +154,7 @@ public class Vm {
 					
 	}
 	
-	private int[] instructionBreakdown(int instruction) throws InvalidInstructionException{
-		int[] ret = new int[6];
-		if(instruction < 0 || instruction > 200000){
-			halt_flag = true;
-			throw new InvalidInstructionException("Invalid instruction:" + instruction);
-		}
-		
-		for (int i = 0; i < ret.length; i++) {
-			ret[i] = ((int)(instruction/((int)Math.pow(10, i)))) - ((int)(instruction/((int)Math.pow(10, i+1))*10));
-		}
-		return ret;
-	}
+
 	
 	private Types getType(int instruction) throws InvalidInstructionException{
 		if(instruction == 0){
@@ -253,7 +264,7 @@ public class Vm {
 		}
 	}
 
-	//IN THIS FUNCTION CONFUSION IS KING!
+	
 	private void jump(int write_digit, int read_digit, int type,boolean non_reg_type) throws Exception{
 		switch (type) {
 		case 1:
@@ -349,7 +360,12 @@ public class Vm {
 			return y.read();
 			
 		case 2:
-			return s.pop();
+			try {
+				return s.pop();
+			} catch (Exception e) {
+				throw new Exception("Tried to pop a empty data stack.");
+			}
+			
 			
 		case 3:
 			return ram.read(x.read());
@@ -475,5 +491,17 @@ public class Vm {
 		
 		System.out.println(s);
 	}
+	
+	static int[] instructionBreakdown(int instruction){
+		int[] ret = new int[6];
+		ret[0] = instruction - ((instruction/(10)*10));
+		ret[1] = ((instruction/(10)))     - ((instruction/(100)*10));
+		ret[2] = ((instruction/(100)))    - ((instruction/(1000)*10));
+		ret[3] = ((instruction/(1000)))   - ((instruction/(10000)*10));
+		ret[4] = ((instruction/(10000)))  - ((instruction/(100000)*10));
+		ret[5] = ((instruction/(100000))) - ((instruction/(1000000)*10));
+		return ret;
+	}
+	
 	
 }

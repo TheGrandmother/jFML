@@ -52,13 +52,10 @@ public class ProgramCounter {
 		address_pointer.write(target);
 	}
 	
-	public void returnJump(){
-		try {
+	public void returnJump() throws StackEmptyException{
+
 			address_pointer.write(jump_stack.pop());
-		} catch (StackEmptyException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
+
 	}
 	
 	

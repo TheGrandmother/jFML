@@ -3,6 +3,12 @@ package components;
 public class Ram {
 	int[] ram;
 	
+	static int shared_start = 70000;
+	static int page_index = 90002;
+	static int page_size = 1000;
+	static int page_enable = 90003;
+	public static int timer_address =90004;
+	
 	public Ram(int size){
 		ram = new int[size];
 	}
@@ -11,7 +17,7 @@ public class Ram {
 		if(addr < 0 || addr >= ram.length){throw new InvalidAddressExcption("Address " + addr + "is not cool.");}
 		ram[addr] = n;
 	}
-	
+	   
 	public int read(int addr) throws InvalidAddressExcption{
 		if(addr < 0 || addr >= ram.length){throw new InvalidAddressExcption("Address " + addr + "is not cool.");}
 		return ram[addr];
@@ -108,6 +114,14 @@ public class Ram {
 			s += "\n";
 		}
 		return s;
+	}
+	
+	public int resolvePA(int va) throws InvalidAddressExcption{
+		if(va <= shared_start && (read(page_enable)==1)){
+			return va + (page_index*page_size);
+		}else{
+			return va;
+		}
 	}
 	
 }

@@ -26,6 +26,7 @@ MOV 90001 x
 MOV x $update_bit
 
 #start
+
 JSR rng
 JSR abs
 MOD s 3
@@ -41,58 +42,11 @@ SUB s 1
 MOV $x_pos x
 ADD x s
 MOV s $x_pos
+
+
 MOV $y_pos s
 MOV $x_pos s
-
-JSR get_pixel
-MOV s $color_1
-
-
-JSR rng
-JSR abs
-MOD s 3
-SUB s 1
-MOV s $y_dir
-
-
-JSR rng
-JSR abs
-MOD s 3
-SUB s 1
-MOV s $x_dir
-
-
-% update temp position
-MOV $y_pos s
-ADD s $y_dir
-MOV s $y_temp
-
-MOV $x_pos s
-ADD s $x_dir
-MOV s $x_temp
-
-
-
-
-
-
-MOV $y_temp s
-MOV $x_temp s
-JSR get_pixel
-MOV s $color_2
-
-MOV $color_1 s
-JSR set_color
-MOV $y_temp s
-MOV $x_temp s
-JSR put_pixel
-
-MOV $color_2 s
-JSR set_color
-MOV $y_pos s
-MOV $x_pos s
-JSR put_pixel
-
+JSR inc_pixel
 MOV 1 s
 MOV $update_bit x
 MOV s $x
@@ -121,15 +75,20 @@ JMP skip4
 MOV 50 s
 MOV s $y_pos
 #skip4
-%JSR wait
+JSR wait
 
 JMP start
 
 
 
-
-#set_color
-MOV s $color
+#rng
+MOV $time x
+ADD $x $random
+MUL s $rng_multiplier
+ADD s $rng_increment
+MOD s $rng_modulo
+MOV s $random
+MOV $random s
 RET
 
 % x is on top and y is on bottom
@@ -139,19 +98,21 @@ MUL s 100
 ADD s x
 ADD $screen_start s
 MOV s y
-MOV $color x
-MOV x $y
+MOV 175 $y
 RET
 
 % x is on top and y is on bottom
-#get_pixel
+#inc_pixel
 MOV s x
 MUL s 100
 ADD s x
 ADD $screen_start s
 MOV s y
 MOV $y s
+ADD s 3
+MOV s $y
 RET
+
 
 #abs
 MOV s x
@@ -167,38 +128,19 @@ MOV x s
 RET
 
 #wait
-%MOV x s
-%MOV y s
+MOV x s
+MOV y s
 MOV 0 x
 #wait_loop
 INC x
 BEQ x $wait_constant
 JMP wait_loop
-%MOV s y
-%MOV s x
+MOV s y
+MOV s x
 RET
 
-#rng
-MOV $time x
-ADD $x $random
-MUL s $rng_multiplier
-ADD s $rng_increment
-MOD s $rng_modulo
-MOV s $random
-MOV $random s
-RET
-
-
-:999999
-@color
-@color_1
-@color_2
 #time
 :90004
-#x_temp
-:0
-#y_temp
-:0
 #x_pos
 :50
 #y_pos
@@ -207,7 +149,6 @@ RET
 :0
 #y_dir
 :0
-
 
 
 
