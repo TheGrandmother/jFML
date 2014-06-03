@@ -46,10 +46,19 @@ public class Screen extends Canvas {
 		int j = 0;
 		int color = 0;
 		for (int i = 0; i < bitmap.length; i++) {
-			if(bitmap[i] > 255){
+			if(bitmap[i] > 0x00FF_FFFF){
 				color = 0x00FF_FFFF;
+				temp[j] =    color; 
+				temp[j+1] = color  ;
+				temp[j+2] = color ;
 			}else{
 				color =  (int)((((double)bitmap[i])/((double)255))*0x00FF_FFFF);
+//				System.out.println((int)(((bitmap[i]/1_000_000)/(255.))) + "  " +
+//						(int)(((bitmap[i]/1000)-((bitmap[i]/1_000_000)*1000)/255.)) + "  "+ 
+//						(int)((bitmap[i]-((bitmap[i]/1_000)*1000)/255.)));
+//				temp[j] =   (int)(((bitmap[i]/1_000_000)/(255.))*0x00FF_FFFF); 
+//				temp[j+1] = (int)(((bitmap[i]/1000)-((bitmap[i]/1_000_000)*1000)/255.)*0x00FF_FFFF);
+//				temp[j+2] =  (int)((bitmap[i]-((bitmap[i]/1_000)*1000)/255.)*0x00FF_FFFF);
 			}
 			temp[j] =    color; 
 			temp[j+1] = color  ;

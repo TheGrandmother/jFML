@@ -38,7 +38,7 @@ public class VFml extends JFrame implements ActionListener{
 	int screen_start = 80000;
 	int screen_end = 90000;
 	int update_bit = 90001;
-	boolean debug = true;
+	boolean debug = false;
 	
 	
 	boolean tick_once = false;
@@ -141,8 +141,9 @@ public class VFml extends JFrame implements ActionListener{
 					v.running = false;
 				}
 				
-				
+				if((v.vm.cycles % 10000 ==0)|| v.tick_once){
 				v.fillLabels();
+				}
 				
 
 			}

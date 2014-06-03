@@ -19,7 +19,7 @@ MOV x $rng_multiplier
 MOV 72 x
 MOV x $rng_increment
 @wait_constant
-MOV 1 x
+MOV 5000 x
 MOV x $wait_constant
 @update_bit
 MOV 90001 x
@@ -121,7 +121,7 @@ JMP skip4
 MOV 50 s
 MOV s $y_pos
 #skip4
-%JSR wait
+JSR wait
 
 JMP start
 

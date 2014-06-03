@@ -23,7 +23,7 @@ MOV s $rng_multiplier
 MOV 72 s
 MOV s $rng_increment
 @wait_constant
-MOV 1 s
+MOV 100000 s
 MOV s $wait_constant
 @update_bit
 MOV 90001 s
@@ -44,7 +44,7 @@ JMP lewp
 MOV $update_bit x
 MOV 1 s
 MOV 1 $x
-%JSR wait
+JSR wait
 MOV 1 s
 ADD s $frame_index
 MOV s y
