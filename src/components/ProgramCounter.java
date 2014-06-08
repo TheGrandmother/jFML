@@ -19,8 +19,8 @@ public class ProgramCounter {
 		address_pointer.write(address_pointer.read()+n);
 	}
 	
-	public void jump(int n){
-		address_pointer.write(n);
+	public void jump(int target){
+		address_pointer.write(target);
 	}
 	
 	public void interrupt1(){
@@ -43,18 +43,18 @@ public class ProgramCounter {
 		return address_pointer.read();
 	}
 	
-	public void subroutineJump(int target, boolean non_reg_type){
-		if(non_reg_type){
-			jump_stack.push(address_pointer.read()+2);
-		}else{
-			jump_stack.push(address_pointer.read()+1);
-		}
+	public void subroutineJump(int target, int return_address){
 		address_pointer.write(target);
+		jump_stack.push(return_address);
 	}
 	
 	public void returnJump() throws StackEmptyException{
-
-			address_pointer.write(jump_stack.pop());
+			try {
+				address_pointer.write(jump_stack.pop());
+			} catch (StackEmptyException e) {
+				throw jump_stack.new StackEmptyException("The jump stack is empty.");
+			}
+			
 
 	}
 	

@@ -273,11 +273,11 @@ public class VFml extends JFrame implements ActionListener{
 		halt_flag_value.setText(""+vm.halt_flag);
 		irq1_flag_value.setText(""+vm.irq1_flag);
 		irq2_flag_value.setText(""+vm.irq2_flag);
-		x_reg_value.setText(""+vm.x.read());
-		y_reg_value.setText(""+vm.y.read());
-		addr_value.setText(""+vm.pc.getAddress());
+		x_reg_value.setText(""+Integer.toHexString(vm.x.read()));
+		y_reg_value.setText(""+Integer.toHexString(vm.y.read()));
+		addr_value.setText(""+Integer.toHexString(vm.pc.getAddress()));
 		try {
-			virtual_addr_value.setText(""+vm.ram.resolvePA(vm.pc.getAddress()));
+			virtual_addr_value.setText(""+Integer.toHexString(vm.ram.resolvePA(vm.pc.getAddress())));
 		} catch (InvalidAddressExcption e1) {
 			// TODO Auto-generated catch block
 			e1.printStackTrace();
@@ -285,7 +285,7 @@ public class VFml extends JFrame implements ActionListener{
 		stack_size_value.setText(""+vm.s.getSize());
 		
 		try {
-			inst_value.setText(""+vm.ram.read(vm.pc.getAddress()));
+			inst_value.setText(""+Integer.toHexString(vm.ram.read(vm.pc.getAddress())));
 		} catch (InvalidAddressExcption e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();

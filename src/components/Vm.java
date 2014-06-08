@@ -1,6 +1,7 @@
 package components;
 
 import components.Ram.InvalidAddressExcption;
+import components.Stack.StackEmptyException;
 
 public class Vm {
 	public Register x;
@@ -15,8 +16,18 @@ public class Vm {
 	public long cycles;
 	public long[][] timers = new long[5][2];
 	long time = 0;
-	 
-	public Vm(int memory_size){
+	int a1_code;
+	int a2_code;
+	int action;
+	int operation;
+	int a1;
+	int a2;
+	int a1_is_non_reg;
+	int a2_is_non_reg;
+	int increment_offset;
+	final boolean DBG = true;
+
+	public Vm(int memory_size) {
 		x = new Register();
 		y = new Register();
 		pc = new ProgramCounter();
@@ -26,16 +37,19 @@ public class Vm {
 		irq2_flag = false;
 		halt_flag = true;
 		cycles = 0;
-		timers[0][1] =1;
-		timers[1][1] =1;
-		timers[2][1] =1;
-		timers[3][1] =1;
-		timers[4][1] =1;
-		
-	} 
-	
-	public void step() throws Exception{
-		int instruction =-1;
+		timers[0][1] = 1;
+		timers[1][1] = 1;
+		timers[2][1] = 1;
+		timers[3][1] = 1;
+		timers[4][1] = 1;
+
+	}
+
+	public void step() throws Exception {
+		if (halt_flag) {
+			return;
+		}
+		int instruction = -1;
 		try {
 			instruction = ram.read(pc.getAddress());
 		} catch (Exception e) {
@@ -43,465 +57,373 @@ public class Vm {
 			halt_flag = true;
 			return;
 		}
-		
-		int[] digits = instructionBreakdown(instruction);
-		boolean non_reg_type = nonReg(instruction);
-		int read_digit = digits[0];
-		int write_digit = digits[1];
+
+		instructionBreakdown(instruction);
+
+		resolveArguments();
+
+		increment_offset = 1 + a1_is_non_reg + a2_is_non_reg;
+
 		jumping = false;
 		
-		if(irq1_flag){
-			pc.interrupt1();
-			irq1_flag = false;
-			return;
-			}
-		if(irq2_flag){
-			pc.interrupt2();
-			irq2_flag = false;
-			return;
-			}
+		dbg("Instruction: " + Integer.toHexString(instruction)+ "\n"
+				+ "Action: " + Integer.toHexString(action) + " Operation: " + Integer.toHexString(operation)
+				+ " a1(code): " +Integer.toHexString(a1_code)+ " a2(code): " +Integer.toHexString(a2_code) +"\n"
+				+ "a1: " + Integer.toHexString(a1) + " a2: " + Integer.toHexString(a2));
 		
-		if(!halt_flag){
-			switch (getType(instruction)) {
-			case NOP:
+		if (!(action == 0 && operation == 0)) {
+			// EXECUTE GOES HERE
+			// Move is a bit special so it has its own thingy.
+			if (action == 0xb && operation == 0) {
+				executeMove();
+				dbg("Executing Move.");
+			} else if (action == 0 && operation != 0) {
+				executeOperation();
+				dbg("Executing Operation.");
+			} else if (action != 0 && operation == 0) {
+				executeAction();
+				dbg("Executing Action.");
+			}
+
+		}
+
+		if (!jumping) {
+			pc.increment(increment_offset);
+		}
+		cycles++;
+		dbg("\n");
+	}
+
+	private void resolveArguments() throws InvalidAddressExcption,
+			StackEmptyException {
+		if ((a1_code & 0b1000) == 0) {
+
+			switch (a1_code & 0b0011) {
+			case 0:
+				a1 = s.pop();
+				a1_is_non_reg = 0;
 				break;
-				
-			case MOVE:
-				time = System.nanoTime();
-				try {
-					move(read_digit, write_digit);
-				} catch (Exception e) {
-					halt_flag = true;
-					e.printStackTrace();
-				}
-				timers[0][0] += System.nanoTime() -time;
-				timers[0][1] ++;
-				
+			case 1:
+				a1 = x.read();
+				a1_is_non_reg = 0;
 				break;
-	
-			case ARITHMETIC:
-				time = System.nanoTime();
-				try {
-					arithmetic(write_digit, read_digit, digits[2]);
-				}catch (Exception e){
-					halt_flag = true;
-					throw new Exception(e.getMessage());
-				}
-				timers[1][0] += System.nanoTime() -time;
-				timers[1][1] ++;
+			case 2:
+				a1 = y.read();
+				a1_is_non_reg = 0;
 				break;
-				
-			case LOGICAL:
-				time = System.nanoTime();
-				try {
-					logical(write_digit, read_digit, digits[3]);
-				} catch (Exception e) {
-					halt_flag = true;
-					throw new Exception(e.getMessage());
-				}
-				timers[2][0] += System.nanoTime() -time;
-				timers[2][1] ++;
+			case 3:
+				a1 = ram.read(pc.getAddress() + 1);
+				a1_is_non_reg = 1;
 				break;
-			
-			case JUMP:
-				time = System.nanoTime();
-				try {
-					jump(write_digit, read_digit, digits[4], non_reg_type);
-				} catch (Exception e) {
-					halt_flag = true;
-					throw new Exception(e.getMessage());
-				}
-				timers[3][0] += System.nanoTime() -time;
-				timers[3][1] ++;
-				break;
-			
-			case SPECIAL:
-				time = System.nanoTime();
-				try {
-					special(digits[5]);
-				} catch (Exception e) {
-					halt_flag = true;
-					throw new Exception(e.getMessage());
-				}
-				timers[4][0] += System.nanoTime() -time;
-				timers[4][1] ++;
-				
-				break;
-			
+
 			default:
 				break;
 			}
-			if(!jumping && !halt_flag){
-				if (non_reg_type) {
-					pc.increment(2);
-				}else{
-					pc.increment(1);
-				}
+
+			if ((a1_code & 0b0100) != 0) {
+				a1 = ram.read(a1);
 			}
-			cycles++;
+		}
+
+		if ((a2_code & 0b1000) == 0) {
+
+			switch (a2_code & 0b0011) {
+			case 0:
+				a2 = s.pop();
+				a2_is_non_reg = 0;
+				break;
+			case 1:
+				a2 = x.read();
+				a2_is_non_reg = 0;
+				break;
+			case 2:
+				a2 = y.read();
+				a2_is_non_reg = 0;
+				break;
+			case 3:
+				a2 = ram.read(pc.getAddress() + 1 + a1_is_non_reg);
+				a2_is_non_reg = 1;
+				break;
+
+			default:
+				break;
+			}
+
+			if ((a2_code & 0b0100) != 0) {
+				a2 = ram.read(a2);
+			}
+		}
+	}
+
+	private void executeMove() throws InvalidAddressExcption {
+
+		if ((a2_code & 0b1000) == 0) {
+
+			switch (a2_code & 0b0011) {
+			case 0:
+				s.push(a1);
+				break;
+			case 1:
+				x.write(a1);
+				break;
+			case 2:
+				y.write(a1);
+
+				break;
+			case 3:
+				ram.write(a1, pc.getAddress() + 1 + a1_is_non_reg);
+				break;
+
+			default:
+				break;
+			}
+
+			if ((a2_code & 0b0100) != 0) {
+				ram.write(a1, a2);
+			}
 		}
 
 	}
-	
-	private boolean nonReg(int instruction) throws Exception{
-		int[] digits = instructionBreakdown(instruction);
-		if(digits[0] == 6  || digits[0] == 5 ||digits[1] == 8
-				 || digits[1] == 5){
-			return true;
-		}else{
-			return false;
-		}
-					
-	}
-	
 
-	
-	private Types getType(int instruction) throws InvalidInstructionException{
-		if(instruction == 0){
-			return Types.NOP;
-		}else if(instruction >= Types.MOVE.start && instruction <= Types.MOVE.end){
-			return Types.MOVE;
-		}else if(instruction >= Types.ARITHMETIC.start && instruction <= Types.ARITHMETIC.end){
-			return Types.ARITHMETIC;
-		}else if(instruction >= Types.LOGICAL.start && instruction <= Types.LOGICAL.end){
-			return Types.LOGICAL;
-		}else if(instruction >= Types.JUMP.start && instruction <= Types.JUMP.end){
-			return Types.JUMP;
-		}else if(instruction >= Types.SPECIAL.start && instruction <= Types.SPECIAL.end){
-			return Types.SPECIAL;
-		}
-		halt_flag = true;
-		throw new InvalidInstructionException("Instruction " + instruction + " can't be resolved \n"+ "At address " + pc.getAddress());
-	}
-	
-	private void move(int read_digit,int write_digit) throws Exception{
-		writeFromDigit(write_digit,readFromReadDigit(read_digit));
-	}
-	
-	private void arithmetic(int write_digit, int read_digit, int type) throws Exception{
-		switch (type) {
+	private void executeOperation() throws InvalidAddressExcption,
+			StackEmptyException, InvalidInstructionException {
+		switch (operation) {
 		case 1:
-			writeFromDigit(write_digit,readFromWriteDigit(write_digit)+1);
+			if ((a1_code & 0b0100) != 0) {
+				throw new InvalidInstructionException(
+						"Impropper argument given to INC instruction: "
+								+ Integer.toHexString(a1_code));
+			}
+			switch (a1_code & 0b0011) {
+			case 0:
+				s.push(s.pop() + 1);
+				break;
+			case 1:
+				x.inc();
+
+				break;
+			case 2:
+				y.inc();
+				break;
+
+			default:
+				throw new InvalidInstructionException(
+						"Impropper argument given to INC instruction: "
+								+ Integer.toHexString(a1_code));
+			}
 			break;
 		case 2:
-			writeFromDigit(write_digit,readFromWriteDigit(write_digit)-1);
+			if ((a1_code & 0b0100) != 0) {
+				throw new InvalidInstructionException(
+						"Impropper argument given to DEC instruction: "
+								+ Integer.toHexString(a1_code));
+			}
+			switch (a1_code & 0b0011) {
+			case 0:
+				s.push(s.pop() - 1);
+				break;
+			case 1:
+				x.dec();
+
+				break;
+			case 2:
+				y.dec();
+				break;
+
+			default:
+				throw new InvalidInstructionException(
+						"Impropper argument given to DEC instruction: "
+								+ Integer.toHexString(a1_code));
+			}
 			break;
 		case 3:
-			s.push(readFromReadDigit(read_digit) + readFromWriteDigit(write_digit));
+			s.push(a1 + a2);
 			break;
 		case 4:
-			s.push(readFromReadDigit(read_digit) - readFromWriteDigit(write_digit));
+			s.push(a1 - a2);
 			break;
 		case 5:
-			s.push(readFromReadDigit(read_digit) * readFromWriteDigit(write_digit));
+			s.push(a1 * a2);
 			break;
 		case 6:
-			s.push(readFromReadDigit(read_digit) / readFromWriteDigit(write_digit));
+			s.push(a1 / a2);
 			break;
 		case 7:
-			s.push(readFromReadDigit(read_digit) % readFromWriteDigit(write_digit));
-			break;
-
-		default:
-			halt_flag = true;
-			throw new InvalidInstructionException("Invalid arithmetic digit: " + type);
-		}
-	}
-	
-	private void logical(int write_digit, int read_digit, int type) throws Exception{
-		switch (type) {
-		case 1:
-			if(readFromWriteDigit(write_digit) == readFromReadDigit(read_digit)){
-				s.push(1);
-			}else{
-				s.push(0);
-			}
-			break;
-			
-		case 2:
-			if(readFromReadDigit(read_digit) < readFromWriteDigit(write_digit)){
-				s.push(1);
-			}else{
-				s.push(0);
-			}
-			break;
-
-		case 3:
-			if(readFromReadDigit(read_digit) > readFromWriteDigit(write_digit) ){
-				s.push(1);
-			}else{
-				s.push(0);
-			}
-			break;
-			
-		case 4:
-			s.push(readFromWriteDigit(write_digit)*10 );
-			break;
-			
-		case 5:
-			s.push(readFromWriteDigit(write_digit)/10 );
-			break;
-			
-		case 6:
-			s.push(readFromReadDigit(read_digit) & readFromWriteDigit(write_digit));
-			break;
-			
-		case 7:
-			s.push(readFromReadDigit(read_digit) | readFromWriteDigit(write_digit));
-			break;
-			
+			s.push(a1 % a2);
 		case 8:
-			s.push(readFromReadDigit(read_digit) ^ readFromWriteDigit(write_digit));
+			if (a1 == a2) {
+				s.push(1);
+			} else {
+				s.push(0);
+			}
 			break;
-			
 		case 9:
-			s.push(~readFromWriteDigit(write_digit));
-			break;
-		
-		default:
-			halt_flag = true;
-			throw new InvalidInstructionException("Invalid logic digit: " + type);
-		}
-	}
-
-	
-	private void jump(int write_digit, int read_digit, int type,boolean non_reg_type) throws Exception{
-		switch (type) {
-		case 1:
-			pc.jump(readFromWriteDigit(write_digit));
-			jumping = true;
-			break;
-		case 2:
-			if(readFromWriteDigit(write_digit) == readFromReadDigit(read_digit)){
-				int next_instruction;
-				if(non_reg_type){
-					next_instruction = ram.read(pc.getAddress()+2);
-				}else{
-					next_instruction = ram.read(pc.getAddress()+1);
-				}
-				if(nonReg(next_instruction)){
-					pc.increment(2);
-				}else{
-					pc.increment(1);
-				}
-			}
-			break;
-		case 3:
-			if(readFromReadDigit(read_digit) < readFromWriteDigit(write_digit)){
-				int next_instruction;
-				if(non_reg_type){
-						next_instruction = ram.read(pc.getAddress()+2);
-				}else{
-					next_instruction = ram.read(pc.getAddress()+1);
-				}
-				if(nonReg(next_instruction)){
-					pc.increment(2);
-				}else{
-					pc.increment(1);
-				}
-			}
-			break;
-		case 4:
-			if(readFromReadDigit(read_digit) > readFromWriteDigit(write_digit)){
-				int next_instruction;
-				if(non_reg_type){
-						next_instruction = ram.read(pc.getAddress()+2);
-				}else{
-					next_instruction = ram.read(pc.getAddress()+1);
-				}
-				if(nonReg(next_instruction)){
-					pc.increment(2);
-				}else{
-					pc.increment(1);
-				}
-			}
-			break;
-		case 5:
-			pc.subroutineJump(readFromWriteDigit(write_digit), non_reg_type);
-			jumping = true;
-			break;
-		case 6:
-			pc.returnJump();
-			jumping = true;
-			break;
-			
-		default:
-			halt_flag = true;
-			throw new InvalidInstructionException("Invalid jump digit: " + type);
-		}
-	}
-	
-	private void special(int type) throws Exception{
-		switch (type) {
-		case 1:
-			halt_flag = true;
-			break;
-			
-		case 2:
-			if(s.isEmpty()){
+			if (a1 > a2) {
 				s.push(1);
-			}else{
+			} else {
 				s.push(0);
 			}
-			
-		default:
-			halt_flag = true;
-			throw new InvalidInstructionException("Invalid special digit: " + type);
-		}
-	}
-	
-	
-	private int readFromReadDigit(int d) throws Exception{
-		switch (d) {
-		case 0:
-			return x.read();
-			
-		case 1:
-			return y.read();
-			
-		case 2:
-			try {
-				return s.pop();
-			} catch (Exception e) {
-				throw new Exception("Tried to pop a empty data stack.");
+			break;
+		case 10:
+			if (a1 < a2) {
+				s.push(1);
+			} else {
+				s.push(0);
 			}
-			
-			
-		case 3:
-			return ram.read(x.read());
-			
-		case 4:
-			return ram.read(y.read());
-			
-		case 5:
-			
-			return ram.read(ram.read(pc.getAddress()+1));
-			
-		case 6:
-			return ram.read(pc.getAddress()+1);
-
+			break;
+		case 11:
+			s.push(a1 & a2);
+			break;
+		case 12:
+			s.push(a1 | a2);
+			break;
+		case 13:
+			s.push(a1 ^ a2);
+			break;
+		case 14:
+			s.push(~a1);
+			break;
+		case 15:
+			if (a2 > 0) {
+				s.push(a1 << a2);
+			} else {
+				s.push(a1 >> (-a2));
+			}
 		default:
-			halt_flag = true;
-			throw new InvalidInstructionException("Invalid read digit: " + d);
+			break;
 		}
 	}
-	
-	private int readFromWriteDigit(int d) throws Exception{
-		switch (d) {
-		case 0:
-			return x.read();
-			
-		case 1:
-			return y.read();
-			
-		case 2:
-			return s.pop();
-			
-		case 3:
-			return ram.read(x.read());
-			
-		case 4:
-			return ram.read(y.read());
-			
-		case 5:
-			return ram.read(ram.read(pc.getAddress()+1));
-			
-		case 8:
-			return ram.read(pc.getAddress()+1);
 
-		default:
-			halt_flag = true;
-			throw new InvalidInstructionException("Invalid write digit (for reading): " + d);
-		}
-	}
-	
-	private void writeFromDigit(int d,int n) throws Exception{
-		switch (d) {
-		case 0:
-			x.write(n);
-			break;
-			
+	private void executeAction() throws StackEmptyException,
+			InvalidAddressExcption, InvalidInstructionException {
+		switch (action) {
 		case 1:
-			y.write(n);
+			jumping = true;
+			pc.jump(a1);
 			break;
-			
 		case 2:
-			s.push(n);
+			jumping = true;
+			pc.subroutineJump(a1, pc.getAddress() + increment_offset);
 			break;
-			
 		case 3:
-			ram.write(n, x.read());
-			break;
-			
+			jumping = true;
+			pc.returnJump();
 		case 4:
-			ram.write(n, y.read());
+			if (a1 == a2) {
+				jumping = true;
+				int next_instruction = ram.read(pc.getAddress()
+						+ increment_offset);
+				int skip_distance = 1;
+				if ((next_instruction & 0b0000_0000_0000_1011) == 0b0011) {
+					skip_distance++;
+				}
+				if ((next_instruction & 0b0000_0000_1011_0000) == 0b0011_0000) {
+					skip_distance++;
+				}
+				pc.jump(increment_offset + skip_distance);
+			}
 			break;
-			
 		case 5:
-			ram.write(n, ram.read(pc.getAddress()+1));
+			if (a1 > a2) {
+				jumping = true;
+				int next_instruction = ram.read(pc.getAddress()
+						+ increment_offset);
+				int skip_distance = 1;
+				if ((next_instruction & 0b0000_0000_0000_1011) == 0b0011) {
+					skip_distance++;
+				}
+				if ((next_instruction & 0b0000_0000_1011_0000) == 0b0011_0000) {
+					skip_distance++;
+				}
+				pc.jump(increment_offset + skip_distance);
+			}
 			break;
-			
 		case 6:
-			pc.setIRQ1(n);
+			if (a1 < a2) {
+				jumping = true;
+				int next_instruction = ram.read(pc.getAddress()
+						+ increment_offset);
+				int skip_distance = 1;
+				if ((next_instruction & 0b0000_0000_0000_1011) == 0b0011) {
+					skip_distance++;
+				}
+				if ((next_instruction & 0b0000_0000_1011_0000) == 0b0011_0000) {
+					skip_distance++;
+				}
+				pc.jump(increment_offset + skip_distance);
+			}
 			break;
-			
 		case 7:
-			pc.setIRQ2(n);
+			if (s.pop() == 1) {
+				jumping = true;
+				pc.jump(a1);
+			}
 			break;
-
-		default:
+		case 8:
+			if (s.pop() == 0) {
+				jumping = true;
+				pc.jump(a1);
+			}
+			break;
+		case 9:
+			if (s.pop() == 1) {
+				jumping = true;
+				pc.subroutineJump(a1, pc.getAddress() + increment_offset);
+			}
+			break;
+		case 10:
+			if (s.pop() == 0) {
+				jumping = true;
+				pc.subroutineJump(a1, pc.getAddress() + increment_offset);
+			}
+			break;
+		case 11:
 			halt_flag = true;
-			throw new InvalidInstructionException("Invalid write digit (for reading): " + d);
+			break;
+		default:
+			throw new InvalidInstructionException(
+					"Something odd happened while executing an action");
 		}
 	}
-	
-	public class InvalidInstructionException extends Exception{
-		public InvalidInstructionException(){super();}
-		public InvalidInstructionException(String message){super(message);}
-	}
-	
-	
-	
-	
-	public enum Types {
-		NOP(0,0), MOVE(1,76), ARITHMETIC(100,786), LOGICAL(1000,9076), JUMP(10000,70000), SPECIAL(100000,200000);
-		final int start;
-		final int end;
-		Types(int start, int end){
-			this.start = start;
-			this.end = end;
+
+	public class InvalidInstructionException extends Exception {
+		public InvalidInstructionException() {
+			super();
+		}
+
+		public InvalidInstructionException(String message) {
+			super(message);
 		}
 	}
-	
-	public void print() throws InvalidAddressExcption{
+
+	public void dbg(String message) {
+		if(DBG){
+			System.out.println(message);
+		}
+	}
+
+	public void print() throws InvalidAddressExcption {
 		String s;
 
-			s = ""
-					+ "Address Pointer: " + pc.getAddress()+"\n"
-					+ "Current instruction: " + ram.read(pc.getAddress()) +"\n"
-					+ "Register X: " + x.read()+"\n"
-					+ "Register Y: " + y.read()+"\n"
-					+ "::::STACK::::"+"\n";
+		s = "" + "Address Pointer: " + pc.getAddress() + "\n"
+				+ "Current instruction: " + ram.read(pc.getAddress()) + "\n"
+				+ "Register X: " + x.read() + "\n" + "Register Y: " + y.read()
+				+ "\n" + "::::STACK::::" + "\n";
 
 		int[] stack = this.s.toArray();
-		for (int i = stack.length-1; i >= 0; i--) {
+		for (int i = stack.length - 1; i >= 0; i--) {
 			s += stack[i] + "\n";
 		}
-		s +=  ":::::::::::::"+"\n";
-		
+		s += ":::::::::::::" + "\n";
+
 		System.out.println(s);
 	}
-	
-	static int[] instructionBreakdown(int instruction){
-		int[] ret = new int[6];
-		ret[0] = instruction - ((instruction/(10)*10));
-		ret[1] = ((instruction/(10)))     - ((instruction/(100)*10));
-		ret[2] = ((instruction/(100)))    - ((instruction/(1000)*10));
-		ret[3] = ((instruction/(1000)))   - ((instruction/(10000)*10));
-		ret[4] = ((instruction/(10000)))  - ((instruction/(100000)*10));
-		ret[5] = ((instruction/(100000))) - ((instruction/(1000000)*10));
-		return ret;
+
+	public void instructionBreakdown(int instruction) {
+		a1_code = instruction & 0x000F;
+		a2_code = (instruction & 0x00F0) >> 4;
+		operation = (instruction & 0x0F00) >> 8;
+		action = (instruction & 0xF000) >> 12;
 	}
-	
-	
+
 }

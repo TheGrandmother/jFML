@@ -129,6 +129,7 @@ public class Assembler {
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
+		System.out.println("Wrote " + (a.current_address-a.start_address) + " lines to " + a.out_name);
 
 
 	}
@@ -153,7 +154,7 @@ public class Assembler {
 
 			} catch (SyntaxError e) {
 				System.out.println("Syntax Error: " + "In file: " + file_name
-						+ " At line: " + line_number);
+						+ ". At line: " + line_number);
 				System.out.println("\t" + e.getMessage());
 				throw new AssemblerError("Failed to parse file: " + file_name);
 
@@ -167,8 +168,9 @@ public class Assembler {
 
 	public void parseLine(String line) throws SyntaxError, AssemblerError {
 		String pretty_line = beautify(line);
-		if (pretty_line == "") {
+		if (pretty_line.matches("\\s*") || pretty_line == "") {
 			return;
+			
 		}
 
 		if (pretty_line.matches(include_regex)) {
@@ -280,98 +282,120 @@ public class Assembler {
 			operation = 0;
 			a1 = not_used;
 			a2 = not_used;
+			if(arguments.length != 1){throw new SyntaxError("Wrong number of arguments: " + line);}
 			break;
 		case "INC":
 			action = 0;
 			operation = 1;
 			a2 = not_used;
+			if(arguments.length != 2){throw new SyntaxError("Wrong number of arguments: " + line);}
 			break;
 		case "DEC":
 			action = 0;
 			operation = 2;
 			a2 = not_used;
+			if(arguments.length != 2){throw new SyntaxError("Wrong number of arguments: " + line);}
 			break;
 		case "ADD":
 			action = 0;
 			operation = 3;
+			if(arguments.length != 3){throw new SyntaxError("Wrong number of arguments: " + line);}
 			break;
 		case "SUB":
 			action = 0;
 			operation = 4;
+			if(arguments.length != 3){throw new SyntaxError("Wrong number of arguments: " + line);}
 			break;
 		case "MUL":
 			action = 0;
 			operation = 5;
+			if(arguments.length != 3){throw new SyntaxError("Wrong number of arguments: " + line);}
 			break;
 		case "DIV":
 			action = 0;
 			operation = 6;
+			if(arguments.length != 3){throw new SyntaxError("Wrong number of arguments: " + line);}
 			break;
 		case "MOD":
 			action = 0;
 			operation = 7;
+			if(arguments.length != 3){throw new SyntaxError("Wrong number of arguments: " + line);}
 			break;
 		case "EQL":
 			action = 0;
 			operation = 8;
+			if(arguments.length != 3){throw new SyntaxError("Wrong number of arguments: " + line);}
 			break;
 		case "GRT":
 			action = 0;
 			operation = 9;
+			if(arguments.length != 3){throw new SyntaxError("Wrong number of arguments: " + line);}
 			break;
 		case "LES":
 			action = 0;
 			operation = 10;
+			if(arguments.length != 3){throw new SyntaxError("Wrong number of arguments: " + line);}
 			break;
 		case "AND":
 			action = 0;
 			operation = 11;
+			if(arguments.length != 3){throw new SyntaxError("Wrong number of arguments: " + line);}
 			break;
 		case "OOR":
 			action = 0;
 			operation = 12;
+			if(arguments.length != 3){throw new SyntaxError("Wrong number of arguments: " + line);}
 			break;
 		case "XOR":
 			action = 0;
 			operation = 13;
+			if(arguments.length != 3){throw new SyntaxError("Wrong number of arguments: " + line);}
 			break;
 		case "NOT":
 			action = 0;
 			operation = 14;
 			a2 = not_used;
+			if(arguments.length != 2){throw new SyntaxError("Wrong number of arguments: " + line);}
 			break;
 		case "SFT":
 			action = 0;
 			operation = 15;
+			if(arguments.length != 3){throw new SyntaxError("Wrong number of arguments: " + line);}
 			break;
 		// ACTIONS
 		case "JMP":
 			action = 1;
 			operation = 0;
 			a2 = not_used;
+			if(arguments.length != 2){throw new SyntaxError("Wrong number of arguments: " + line);}
 			break;
 		case "JSR":
 			action = 2;
 			operation = 0;
 			a2 = not_used;
+			if(arguments.length != 2){throw new SyntaxError("Wrong number of arguments: " + line);}
 			break;
 		case "RET":
 			action = 3;
 			operation = 0;
 			a1 = not_used;
 			a2 = not_used;
+			if(arguments.length != 1){throw new SyntaxError("Wrong number of arguments: " + line);}
 			break;
 		case "SEQ":
 			action = 4;
 			operation = 0;
+			if(arguments.length != 3){throw new SyntaxError("Wrong number of arguments: " + line);}
 			break;
 		case "SGR":
 			action = 5;
 			operation = 0;
+			if(arguments.length != 3){throw new SyntaxError("Wrong number of arguments: " + line);}
 			break;
 		case "SLE":
 			action = 6;
 			operation = 0;
+			if(arguments.length != 3){throw new SyntaxError("Wrong number of arguments: " + line);}
 			break;
 		case "JOO":
 			action = 7;
@@ -382,26 +406,31 @@ public class Assembler {
 			action = 8;
 			operation = 0;
 			a2 = not_used;
+			if(arguments.length != 2){throw new SyntaxError("Wrong number of arguments: " + line);}
 			break;
 		case "S00":
 			action = 9;
 			operation = 0;
 			a2 = not_used;
+			if(arguments.length != 2){throw new SyntaxError("Wrong number of arguments: " + line);}
 			break;
 		case "SOZ":
 			action = 10;
 			operation = 0;
 			a2 = not_used;
+			if(arguments.length != 2){throw new SyntaxError("Wrong number of arguments: " + line);}
 			break;
 		case "HLT":
 			action = 11;
 			operation = 0;
 			a1 = not_used;
 			a2 = not_used;
+			if(arguments.length != 1){throw new SyntaxError("Wrong number of arguments: " + line);}
 			break;
 		case "MOV":
 			action = 11;
 			operation = 0;
+			if(arguments.length != 3){throw new SyntaxError("Wrong number of arguments: " + line);}
 			break;
 
 		default:
@@ -484,7 +513,15 @@ public class Assembler {
 				break;
 			}
 		}
-
+		
+		//Here we do some horrible error checking
+		if(action == 12 && a2== 0b0011){
+			throw new SyntaxError("You can't move stuff to a numeric constant here: " + line);
+			}
+		if((operation == 1 || operation == 2) && !(a1 == 0b0000 || a1 == 0b0001 || a1 == 0b0010)){
+			throw new SyntaxError("You can only increment/decrement the registers or the stack: " + line);
+			}
+		
 		instruction = a1;
 		instruction = instruction | (a2 << 4);
 		instruction = instruction | (operation << 8);
@@ -621,6 +658,15 @@ public class Assembler {
 
 		public AssemblerError(String s) {
 			super(s);
+		}
+	}
+	
+	public class AssemblerWarning extends Exception{
+		public AssemblerWarning(){
+			super();
+		}
+		public AssemblerWarning(String message){
+			super(message);
 		}
 	}
 
