@@ -1,15 +1,16 @@
 jFML
 ==
-A java implementation of the FML machine wich i have designed.
+A java implementation of the FML machine which i have designed.
 
 Basic Usage
 -----
 Run the VFml class.
-To se a very basic little example just hit the "Assemble And Load" button in the lower left corner. 
+To see a very basic little example just hit the "Assemble And Load" button in the lower left corner. 
 Choose the cloud.asm file. Then just hit "Run".
-The "Assemble And Load" buttun assembles the chosen file. generates a outputfile with the same name but with a .fml file extenstion and then loads the assembled program into memory address 0.
+The "Assemble And Load" button assembles the chosen file. generates a output file with the same name but with a .fml file extension and then loads the assembled program into memory address 0.
 
-A more thurrough usage guide will apeare sometime in the future.
+A more thorough usage guide will appear sometime in the future.
+Once I'm satisfied with the entire ISA i will write a proper documentation but the crap below here will serve as a general description of how the VM works.
 
 
 Short ISA description
@@ -44,40 +45,46 @@ Short ISA description
 		1. Don't use argument *
 
 		
-Operations:
-|1|
-|1|
-|1|
-|1|
-|1|
-|1|
-|1|
-|1|
-|1|
-|1|
-|1|
-	0. NOP	9 . GRT
-	1. INC	10. LES
-	2. DEC	11. AND
-	3. ADD	12. OOR
-	4. SUB	13. XOR
-	5. MUL	14. NOT
-	6. DIV	15. SFT
-	7. MOD	
-	8. EQL
+####Operations:
+ Operation Bits | Description
+ ---------------|------------
+ 0 | NOP
+ 1 | INC
+ 2 | DEC
+ 3 | ADD
+ 4 | SUB
+ 5 | MUL
+ 6 | DIV
+ 7 | MOD
+ 8 | EQL
+ 9 | GRT
+ 10 | LES
+ 11 | AND
+ 12 | OOR
+ 13 | XOR
+ 14 | NOT
+ 15 | SFT
+
 	
-Actions:
-	0: NOP	9 : S00
-	1: JMP	10: S0Z
-	2: JSR	11: HLT	
-	3: RET	12: MOV
-	4: SEQ
-	5: SGR
-	6: SLE
-	7: JOO	
-	8: JOZ
+####Actions:
+ Action Bits | Description
+ ---------------|------------
+ 0 | NOP
+ 1 | JMP
+ 2 | JSR
+ 3 | RET
+ 4 | SEQ
+ 5 | SGR
+ 6 | SLE
+ 7 | JOO
+ 8 | JOZ
+ 9 | SOO
+ 10 | SOZ
+ 11 | HLT
+ 12 | MOV
+ 13 | XOR
 	
-MAP:
+#####Explanations:
 						
   Menonic 	|   Description	      
 -----------|----------------
@@ -109,6 +116,30 @@ MAP:
  SOO | Jump to subroutine a1 if s = 1
  SOZ | Jump to subroutine a1 if s = 0
  HLT | Halt 
+ 
+
+
+Assembler
+--------
+Special charcters:<br>
+&nbsp; &nbsp; &nbsp; &nbsp;\ &nbsp; &nbsp; &nbsp; &nbsp;Are considered comments and everything after this character will be ignored<br>
+&nbsp; &nbsp; &nbsp; &nbsp;:&nbsp; &nbsp; &nbsp; &nbsp;This is raw data entry. Its address will correspond to where in the code they appear<br>
+&nbsp; &nbsp; &nbsp; &nbsp;<&nbsp; &nbsp; &nbsp; &nbsp;Includes the file specified. Into the place where it was found.<br>
+&nbsp; &nbsp; &nbsp; &nbsp;_&nbsp; &nbsp; &nbsp; &nbsp;Are blanks and will be ignored. (not the same as spaces)<br>
+<br>
+
+References:<br>
+&nbsp; &nbsp; &nbsp; &nbsp;@&nbsp; &nbsp; &nbsp; &nbsp;Are pointers and they will be assigned an arbitrary address<br>
+&nbsp; &nbsp; &nbsp; &nbsp;#&nbsp; &nbsp; &nbsp; &nbsp;Are labels and their address will correspond to where in the code they are<br>
+&nbsp; &nbsp; &nbsp; &nbsp;!&nbsp; &nbsp; &nbsp; &nbsp;These are constants. The place where they are declared will not appear in the output<br>
+<br>
+
+All references except constants can be augmented with a +n. 
+This means that it should reserve that address and the n next addresses.
+EX: #here+100
+Will make sure that the assembler puts nothing but
+zeroes for 100 addresses after the address of the #here label
+
 
 
 
