@@ -31,6 +31,13 @@ public class Stack{
 		return stack[frame_pointer+1];
 		
 	}
+	public int peek(){
+		if(frame_pointer < 0){
+			return -1337;
+		}else{
+			return stack[frame_pointer];
+		}
+	}
 	
 	public boolean isEmpty(){
 		if(frame_pointer == -1){

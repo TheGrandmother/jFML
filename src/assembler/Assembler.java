@@ -12,7 +12,14 @@ import java.util.LinkedList;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import com.sun.corba.se.spi.ior.MakeImmutable;
 
+/**
+ * This is an Assembler for the FML machine.
+ * 
+ * @author TheGrandmother
+ *
+ */
 public class Assembler {
 
 	String current_file = "";
@@ -22,7 +29,7 @@ public class Assembler {
 	static int default_start_address = 0;
 	String in_name;
 	String out_name;
-	
+
 	HashMap<String, Pointer> pointer_map;
 	HashMap<String, Label> label_map;
 	HashMap<String, Constant> constant_map;
@@ -30,15 +37,16 @@ public class Assembler {
 	LinkedList<Integer> machinecode_list;
 	int current_address;
 	int start_address;
-	static final String int_regex = "((0x[a-fA-F[0-9]]+)|(\\d+))";
+	static final String int_regex = "((-?0x[a-fA-F[0-9]]+)|(-?\\d+))";
 	static final String raw_regex = ":" + int_regex;
-	static final String include_regex = "<\\s*\\w+\\.asm";
-	static final String pointer_regex = "@\\s*\\D\\w+\\s*(\\+\\s*" + int_regex
-			+ ")?";
-	static final String label_regex = "#\\s*\\D\\w+";
-	static final String constant_regex = "!\\s*\\D\\w+\\s*=\\s*" + int_regex;
-	static final String instruction_regex = "([a-zA-Z]{3})(\\s+\\$?((\\w+)|"
-			+ int_regex + "))?(\\s+\\$?((\\w+)|" + int_regex + "))?";
+	static final String include_regex = "<\\s*[\\w.-]+\\.asm";
+	static final String pointer_regex = "@\\s*\\D[\\w.-]+\\s*(\\+\\s*"
+			+ int_regex + ")?";
+	static final String label_regex = "#\\s*\\D[\\w.-]+";
+	static final String constant_regex = "!\\s*\\D[\\w.-]+\\s*=\\s*"
+			+ int_regex;
+	static final String instruction_regex = "([a-zA-Z]{3})(\\s+\\$?(([\\w.-]+)|"
+			+ int_regex + "))?(\\s+\\$?(([\\w.-]+)|" + int_regex + "))?";
 
 	public Assembler() {
 		pointer_map = new HashMap<String, Pointer>();
@@ -49,10 +57,10 @@ public class Assembler {
 		current_address = default_start_address;
 	}
 
-	public static void main(String[] args) {
+	public static void main(String[] args) throws AssemblerError {
 
 		Assembler a = new Assembler();
-		
+
 		switch (args.length) {
 
 		case 1:
@@ -61,7 +69,7 @@ public class Assembler {
 			a.in_name = args[0];
 			a.out_name = default_out;
 			break;
-			
+
 		case 2:
 			a.start_address = default_start_address;
 			a.current_address = a.start_address;
@@ -82,63 +90,54 @@ public class Assembler {
 			a.out_name = default_out;
 			break;
 		}
-		
-		
+
 		try {
 			a.scanFile(a.in_name);
 		} catch (IOException e) {
 			e.printStackTrace();
-
-		} catch (AssemblerError e) {
-
-			System.out.println("Assembler error: " + e.getMessage());
-			return;
 		}
 
 		for (Token p : a.token_list) {
 			p.print();
 		}
 
-		try {
+
 			a.resolvePointers();
 			a.resolveAllRefernces();
-			
-		} catch (AssemblerError e) {
-			System.out.println("Assembler error: " + e.getMessage());
-			return;
-		}
-		
+
+
 		try {
 			File output_file = new File(a.out_name);
 			BufferedWriter out_buffer;
-				if(output_file.exists()){
-					output_file.delete();
-					output_file.createNewFile();
-					out_buffer = new BufferedWriter(new FileWriter(output_file,true));
-				}else{
-					output_file.createNewFile();
-					out_buffer = new BufferedWriter(new FileWriter(output_file,true));
-				}
+			if (output_file.exists()) {
+				output_file.delete();
+				output_file.createNewFile();
+				out_buffer = new BufferedWriter(new FileWriter(output_file,
+						true));
+			} else {
+				output_file.createNewFile();
+				out_buffer = new BufferedWriter(new FileWriter(output_file,
+						true));
+			}
 
-			out_buffer.write(Integer.toString(a.start_address)+"\n");
+			// out_buffer.write(Integer.toString(a.start_address)+"\n");
 			for (Integer i : a.machinecode_list) {
-					out_buffer.write(Integer.toString(i)+"\n");
+				out_buffer.write(Integer.toString(i) + "\n");
 			}
 			out_buffer.close();
-			
+
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
-		System.out.println("Wrote " + (a.current_address-a.start_address) + " lines to " + a.out_name);
-
+		System.out.println("Wrote " + (a.current_address - a.start_address)
+				+ " lines to " + a.out_name);
 
 	}
-
 
 	static String beautify(String s) {
 		return s.trim().replaceAll("_", "").replaceAll("/.*", "");
 	}
-
+	
 	public void scanFile(String file_name) throws IOException, AssemblerError {
 
 		BufferedReader reader = new BufferedReader(new FileReader(file_name));
@@ -167,16 +166,11 @@ public class Assembler {
 	}
 
 	public void parseLine(String line) throws SyntaxError, AssemblerError {
-		String pretty_line = beautify(line);
+		String pretty_line = beautify(line).trim();
 		if (pretty_line.matches("\\s*") || pretty_line == "") {
 			return;
-			
-		}
-
-		if (pretty_line.matches(include_regex)) {
-
+		}else if (pretty_line.matches(include_regex)) {
 			int temp_line_number = line_number;
-
 			try {
 
 				scanFile(pretty_line.substring(pretty_line.indexOf("<") + 1)
@@ -191,7 +185,7 @@ public class Assembler {
 		} else if (pretty_line.matches(raw_regex)) {
 			parseRaw(pretty_line);
 		} else if (pretty_line.matches(constant_regex)) {
-			parseConstant(line);
+			parseConstant(pretty_line);
 		} else if (pretty_line.matches(label_regex)) {
 			parseLabel(pretty_line);
 		} else if (pretty_line.matches(pointer_regex)) {
@@ -233,8 +227,8 @@ public class Assembler {
 	}
 
 	void parseConstant(String line) throws SyntaxError {
-		String name = line.substring(line.indexOf("!") + 1, line.indexOf("="))
-				.trim();
+		String name = beautify(line.substring(line.indexOf("!") + 1,
+				line.indexOf("=")).trim());
 		String data = line.substring(line.indexOf("=") + 1).trim();
 		assertUnique(name);
 		constant_map.put(name, new Constant(name, getNumber(data), line_number,
@@ -255,7 +249,7 @@ public class Assembler {
 	void parseInstruction(String line) throws SyntaxError {
 		line = line.trim();
 		String[] arguments = line.split("\\s+");
-		
+
 		int action = 0;
 		int operation = 0;
 		int a1 = 0;
@@ -282,120 +276,164 @@ public class Assembler {
 			operation = 0;
 			a1 = not_used;
 			a2 = not_used;
-			if(arguments.length != 1){throw new SyntaxError("Wrong number of arguments: " + line);}
+			if (arguments.length != 1) {
+				throw new SyntaxError("Wrong number of arguments: " + line);
+			}
 			break;
 		case "INC":
 			action = 0;
 			operation = 1;
 			a2 = not_used;
-			if(arguments.length != 2){throw new SyntaxError("Wrong number of arguments: " + line);}
+			if (arguments.length != 2) {
+				throw new SyntaxError("Wrong number of arguments: " + line);
+			}
 			break;
 		case "DEC":
 			action = 0;
 			operation = 2;
 			a2 = not_used;
-			if(arguments.length != 2){throw new SyntaxError("Wrong number of arguments: " + line);}
+			if (arguments.length != 2) {
+				throw new SyntaxError("Wrong number of arguments: " + line);
+			}
 			break;
 		case "ADD":
 			action = 0;
 			operation = 3;
-			if(arguments.length != 3){throw new SyntaxError("Wrong number of arguments: " + line);}
+			if (arguments.length != 3) {
+				throw new SyntaxError("Wrong number of arguments: " + line);
+			}
 			break;
 		case "SUB":
 			action = 0;
 			operation = 4;
-			if(arguments.length != 3){throw new SyntaxError("Wrong number of arguments: " + line);}
+			if (arguments.length != 3) {
+				throw new SyntaxError("Wrong number of arguments: " + line);
+			}
 			break;
 		case "MUL":
 			action = 0;
 			operation = 5;
-			if(arguments.length != 3){throw new SyntaxError("Wrong number of arguments: " + line);}
+			if (arguments.length != 3) {
+				throw new SyntaxError("Wrong number of arguments: " + line);
+			}
 			break;
 		case "DIV":
 			action = 0;
 			operation = 6;
-			if(arguments.length != 3){throw new SyntaxError("Wrong number of arguments: " + line);}
+			if (arguments.length != 3) {
+				throw new SyntaxError("Wrong number of arguments: " + line);
+			}
 			break;
 		case "MOD":
 			action = 0;
 			operation = 7;
-			if(arguments.length != 3){throw new SyntaxError("Wrong number of arguments: " + line);}
+			if (arguments.length != 3) {
+				throw new SyntaxError("Wrong number of arguments: " + line);
+			}
 			break;
 		case "EQL":
 			action = 0;
 			operation = 8;
-			if(arguments.length != 3){throw new SyntaxError("Wrong number of arguments: " + line);}
+			if (arguments.length != 3) {
+				throw new SyntaxError("Wrong number of arguments: " + line);
+			}
 			break;
 		case "GRT":
 			action = 0;
 			operation = 9;
-			if(arguments.length != 3){throw new SyntaxError("Wrong number of arguments: " + line);}
+			if (arguments.length != 3) {
+				throw new SyntaxError("Wrong number of arguments: " + line);
+			}
 			break;
 		case "LES":
 			action = 0;
 			operation = 10;
-			if(arguments.length != 3){throw new SyntaxError("Wrong number of arguments: " + line);}
+			if (arguments.length != 3) {
+				throw new SyntaxError("Wrong number of arguments: " + line);
+			}
 			break;
 		case "AND":
 			action = 0;
 			operation = 11;
-			if(arguments.length != 3){throw new SyntaxError("Wrong number of arguments: " + line);}
+			if (arguments.length != 3) {
+				throw new SyntaxError("Wrong number of arguments: " + line);
+			}
 			break;
 		case "OOR":
 			action = 0;
 			operation = 12;
-			if(arguments.length != 3){throw new SyntaxError("Wrong number of arguments: " + line);}
+			if (arguments.length != 3) {
+				throw new SyntaxError("Wrong number of arguments: " + line);
+			}
 			break;
 		case "XOR":
 			action = 0;
 			operation = 13;
-			if(arguments.length != 3){throw new SyntaxError("Wrong number of arguments: " + line);}
+			if (arguments.length != 3) {
+				throw new SyntaxError("Wrong number of arguments: " + line);
+			}
 			break;
 		case "NOT":
 			action = 0;
 			operation = 14;
 			a2 = not_used;
-			if(arguments.length != 2){throw new SyntaxError("Wrong number of arguments: " + line);}
+			if (arguments.length != 2) {
+				throw new SyntaxError("Wrong number of arguments: " + line);
+			}
 			break;
 		case "SFT":
 			action = 0;
 			operation = 15;
-			if(arguments.length != 3){throw new SyntaxError("Wrong number of arguments: " + line);}
+			if (arguments.length != 3) {
+				throw new SyntaxError("Wrong number of arguments: " + line);
+			}
 			break;
 		// ACTIONS
 		case "JMP":
 			action = 1;
 			operation = 0;
 			a2 = not_used;
-			if(arguments.length != 2){throw new SyntaxError("Wrong number of arguments: " + line);}
+			if (arguments.length != 2) {
+				throw new SyntaxError("Wrong number of arguments: " + line);
+			}
 			break;
 		case "JSR":
 			action = 2;
 			operation = 0;
 			a2 = not_used;
-			if(arguments.length != 2){throw new SyntaxError("Wrong number of arguments: " + line);}
+			if (arguments.length != 2) {
+				throw new SyntaxError("Wrong number of arguments: " + line);
+			}
 			break;
 		case "RET":
 			action = 3;
 			operation = 0;
 			a1 = not_used;
 			a2 = not_used;
-			if(arguments.length != 1){throw new SyntaxError("Wrong number of arguments: " + line);}
+			if (arguments.length != 1) {
+				throw new SyntaxError("Wrong number of arguments: " + line);
+			}
 			break;
 		case "SEQ":
 			action = 4;
 			operation = 0;
-			if(arguments.length != 3){throw new SyntaxError("Wrong number of arguments: " + line);}
+			if (arguments.length != 3) {
+				throw new SyntaxError("Wrong number of arguments: " + line);
+			}
 			break;
 		case "SGR":
 			action = 5;
 			operation = 0;
-			if(arguments.length != 3){throw new SyntaxError("Wrong number of arguments: " + line);}
+			if (arguments.length != 3) {
+				throw new SyntaxError("Wrong number of arguments: " + line);
+			}
 			break;
 		case "SLE":
 			action = 6;
 			operation = 0;
-			if(arguments.length != 3){throw new SyntaxError("Wrong number of arguments: " + line);}
+			if (arguments.length != 3) {
+				throw new SyntaxError("Wrong number of arguments: " + line);
+			}
 			break;
 		case "JOO":
 			action = 7;
@@ -406,31 +444,41 @@ public class Assembler {
 			action = 8;
 			operation = 0;
 			a2 = not_used;
-			if(arguments.length != 2){throw new SyntaxError("Wrong number of arguments: " + line);}
+			if (arguments.length != 2) {
+				throw new SyntaxError("Wrong number of arguments: " + line);
+			}
 			break;
 		case "S00":
 			action = 9;
 			operation = 0;
 			a2 = not_used;
-			if(arguments.length != 2){throw new SyntaxError("Wrong number of arguments: " + line);}
+			if (arguments.length != 2) {
+				throw new SyntaxError("Wrong number of arguments: " + line);
+			}
 			break;
 		case "SOZ":
 			action = 10;
 			operation = 0;
 			a2 = not_used;
-			if(arguments.length != 2){throw new SyntaxError("Wrong number of arguments: " + line);}
+			if (arguments.length != 2) {
+				throw new SyntaxError("Wrong number of arguments: " + line);
+			}
 			break;
 		case "HLT":
 			action = 11;
 			operation = 0;
 			a1 = not_used;
 			a2 = not_used;
-			if(arguments.length != 1){throw new SyntaxError("Wrong number of arguments: " + line);}
+			if (arguments.length != 1) {
+				throw new SyntaxError("Wrong number of arguments: " + line);
+			}
 			break;
 		case "MOV":
-			action = 11;
+			action = 12;
 			operation = 0;
-			if(arguments.length != 3){throw new SyntaxError("Wrong number of arguments: " + line);}
+			if (arguments.length != 3) {
+				throw new SyntaxError("Wrong number of arguments: " + line);
+			}
 			break;
 
 		default:
@@ -442,7 +490,7 @@ public class Assembler {
 			if (arguments[1].charAt(0) == "$".charAt(0)) {
 				a1 |= is_address;
 				match_me = arguments[1].substring(1);
-				
+
 			} else {
 				a1 = 0;
 				match_me = arguments[1];
@@ -460,11 +508,12 @@ public class Assembler {
 
 			default:
 				if (match_me == "") {
-					throw new SyntaxError("Must have atleast one argument: " + line);
+					throw new SyntaxError("Must have atleast one argument: "
+							+ line);
 				}
 				a1 += non_reg;
 				if (match_me.matches(int_regex)) {
-					
+
 					a1_token = new Data(getNumber(match_me));
 				} else {
 					a1_token = new Entry(match_me);
@@ -475,16 +524,16 @@ public class Assembler {
 
 		if (arguments.length == 3 && a2 != not_used) {
 			String match_me;
-			
+
 			if (arguments[2].charAt(0) == "$".charAt(0)) {
 				a2 |= is_address;
 				match_me = arguments[2].substring(1);
-				
+
 			} else {
 				a2 = 0;
 				match_me = arguments[2];
 			}
-			
+
 			switch (match_me) {
 			case "s":
 
@@ -502,7 +551,8 @@ public class Assembler {
 			default:
 
 				if (match_me == "") {
-					throw new SyntaxError("Must have a second argument: " + line);
+					throw new SyntaxError("Must have a second argument: "
+							+ line);
 				}
 				a2 |= non_reg;
 				if (match_me.matches(int_regex)) {
@@ -513,15 +563,19 @@ public class Assembler {
 				break;
 			}
 		}
-		
-		//Here we do some horrible error checking
-		if(action == 12 && a2== 0b0011){
-			throw new SyntaxError("You can't move stuff to a numeric constant here: " + line);
-			}
-		if((operation == 1 || operation == 2) && !(a1 == 0b0000 || a1 == 0b0001 || a1 == 0b0010)){
-			throw new SyntaxError("You can only increment/decrement the registers or the stack: " + line);
-			}
-		
+
+		// Here we do some horrible error checking
+		if (action == 12 && a2 == 0b0011) {
+			throw new SyntaxError(
+					"You can't move stuff to a numeric constant here: " + line);
+		}
+		if ((operation == 1 || operation == 2)
+				&& !(a1 == 0b0000 || a1 == 0b0001 || a1 == 0b0010)) {
+			throw new SyntaxError(
+					"You can only increment/decrement the registers or the stack: "
+							+ line);
+		}
+
 		instruction = a1;
 		instruction = instruction | (a2 << 4);
 		instruction = instruction | (operation << 8);
@@ -584,7 +638,7 @@ public class Assembler {
 		}
 	}
 
-	void resolvePointers(){
+	void resolvePointers() {
 		current_address++;
 		for (Pointer p : pointer_map.values()) {
 			p.value = current_address + p.offset;
@@ -592,16 +646,13 @@ public class Assembler {
 			current_address += 1 + p.offset;
 		}
 	}
-	
-	
-	
-	
+
 	void resolveAllRefernces() throws AssemblerError {
 		String entry_name;
 		for (Token t : token_list) {
 			if (t.getClass() == Entry.class) {
 				entry_name = ((Entry) t).name;
-				
+
 				if (pointer_map.containsKey(entry_name)) {
 					if (!pointer_map.get(entry_name).resolved) {
 						throw new AssemblerError("Unserloved token: "
@@ -612,28 +663,19 @@ public class Assembler {
 					}
 					machinecode_list.add(pointer_map.get(entry_name).value);
 				} else if (label_map.containsKey(entry_name)) {
-//					if (!pointer_map.get(entry_name).resolved) {
-//						throw new AssemblerError("Unserloved token: "
-//								+ entry_name + ". Defined at line"
-//								+ pointer_map.get(entry_name).defined_at_line
-//								+ " in file "
-//								+ pointer_map.get(entry_name).defined_in_file);
-//					}
 					machinecode_list.add(label_map.get(entry_name).value);
 				} else if (constant_map.containsKey(entry_name)) {
-//					if (!pointer_map.get(entry_name).resolved) {
-//						throw new AssemblerError("Unserloved token: "
-//								+ entry_name + ". Defined at line"
-//								+ pointer_map.get(entry_name).defined_at_line
-//								+ " in file "
-//								+ pointer_map.get(entry_name).defined_in_file);
-//					}
 					machinecode_list.add(constant_map.get(entry_name).value);
-				} else{
-					throw new AssemblerError("Entry " + entry_name + " has not been defined.");
+				} else {
+					System.out.println("#############");
+					for (Constant c : constant_map.values()) {
+						c.print();
+					}
+					throw new AssemblerError("Entry " + entry_name
+							+ " has not been defined.");
 				}
-				
-			} else{
+
+			} else {
 				machinecode_list.add(t.value);
 			}
 		}
@@ -660,12 +702,13 @@ public class Assembler {
 			super(s);
 		}
 	}
-	
-	public class AssemblerWarning extends Exception{
-		public AssemblerWarning(){
+
+	public class AssemblerWarning extends Exception {
+		public AssemblerWarning() {
 			super();
 		}
-		public AssemblerWarning(String message){
+
+		public AssemblerWarning(String message) {
 			super(message);
 		}
 	}

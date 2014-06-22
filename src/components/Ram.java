@@ -3,11 +3,15 @@ package components;
 public class Ram {
 	int[] ram;
 	
-	static int shared_start = 70000;
-	static int page_index = 90002;
+	static int shared_start = 800_000;
+	public static int screen_start = 900_000;
+	public static int screen_end = 964_000;
+	public static int update_bit = 964_001;
+	static int page_index = 964_002;
+	static int page_enable = 964_003;
+	public static int timer_address =964_004;
 	static int page_size = 1000;
-	static int page_enable = 90003;
-	public static int timer_address =90004;
+	
 	
 	public Ram(int size){
 		ram = new int[size];
