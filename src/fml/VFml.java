@@ -165,7 +165,7 @@ public class VFml extends JFrame implements ActionListener {
 		while (true) {
 			if (v.running || v.tick_once) {
 
-				if ((v.vm.cycles % 100000 == 0) || v.tick_once) {
+				if ((v.vm.cycles % 1000000 == 0) || v.tick_once) {
 					v.fillLabels();
 				}
 
@@ -237,6 +237,8 @@ public class VFml extends JFrame implements ActionListener {
 		time = System.currentTimeMillis();
 
 		screen = new Screen(320, 200, 3);
+		loadFile("standard/standard.mem", Ram.screen_start);
+		loadFile("standard/font.mem", Ram.charset_start);
 		populateScreen();
 		screen.drawScreen();
 		screen.repaint();
@@ -396,6 +398,8 @@ public class VFml extends JFrame implements ActionListener {
 			running = false;
 			vm = new Vm(memory_size);
 			vm.halt_flag = false;
+			loadFile("standard/standard.mem", Ram.screen_start);
+			loadFile("standard/font.mem", Ram.charset_start);
 			break;
 
 		case "Step":
@@ -426,7 +430,7 @@ public class VFml extends JFrame implements ActionListener {
 
 		case "Load":
 			fc.setAcceptAllFileFilterUsed(false);
-			fc.addChoosableFileFilter(mem_filter);
+			//fc.addChoosableFileFilter(mem_filter);
 			fc.showOpenDialog(big);
 			f = fc.getSelectedFile();
 			loadFile(f.getPath(), Integer.parseInt(memmory_start.getText()));

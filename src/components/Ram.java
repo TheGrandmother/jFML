@@ -11,6 +11,7 @@ public class Ram {
 	static int page_enable = 964_003;
 	public static int timer_address =964_004;
 	static int page_size = 1000;
+	public static int charset_start = 964005;
 	
 	
 	public Ram(int size){

@@ -1,5 +1,6 @@
 #graphics.INIT
-JSR graphics.Update
+MOV 0xBABE y
+JSR graphics.UpdateAndWait
 JMP graphics.ESCAPE
 //HLT
 
@@ -130,8 +131,24 @@ HLT
 HLT
 
 
-#graphics.getRED
+#graphics.UpdateAndWait
+	MOV 1 $std.screen.update_bit
+	#graphics.UpdateAndWait.loop
+	SEQ $std.screen.update_bit 0
+	JMP graphics.UpdateAndWait.loop
+	RET
 
+#graphics.Clear
+	MOV 0xC0FFE y
+	@graphics.Clear.tmp
+	mov std.screen.start x
+	//mov 0 $std.screen.color
+	#graphics.Clear.loop
+		MOV 0 $x
+		INC x
+		SEQ x std.screen.end
+		JMP graphics.Clear.loop
+		RET
 
 
 //X is on top. Y is on bottom
@@ -150,7 +167,6 @@ HLT
 	RET
 	HLT
 	#graphics.PutPixel.x_out_of_bounds
-		MOV s x
 		RET
 		HLT
 	#graphics.PutPixel.y_out_of_bounds

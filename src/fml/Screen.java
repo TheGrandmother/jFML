@@ -67,9 +67,9 @@ public class Screen extends Canvas {
 
 	public void drawScreen() {
 		if (buffer == 0) {
-			buffer1 = (BufferedImage) getImageFromArray(bitmap, width, height);
-		} else {
 			buffer2 = (BufferedImage) getImageFromArray(bitmap, width, height);
+		} else {
+			buffer1 = (BufferedImage) getImageFromArray(bitmap, width, height);
 		}
 	}
 
@@ -98,11 +98,11 @@ public class Screen extends Canvas {
 	public void flip() {
 		if (buffer == 0) {
 			g.dispose();
-			g = (Graphics2D) buffer2.getGraphics();
+			g = (Graphics2D) buffer1.getGraphics();
 			buffer = 1;
 		} else {
 			g.dispose();
-			g = (Graphics2D) buffer1.getGraphics();
+			g = (Graphics2D) buffer2.getGraphics();
 			buffer = 0;
 		}
 	}

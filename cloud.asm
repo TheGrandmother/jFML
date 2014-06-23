@@ -55,7 +55,7 @@ MOV 0xCAFE y
 	MOV $y_pos s
 	MOV $x_pos s
 	JSR graphics.GetPixel
-	ADD s 0x223
+	ADD s 0x112
 	JSR graphics.SetColor
 	JMP skip_colors
 	#decrement_color
@@ -71,6 +71,10 @@ MOV 0xCAFE y
 	MOV $x_pos s
 	JSR graphics.PutPixel
 	JSR graphics.Update
+	//MOV 1 s
+	//JSR std.WaitMilli
+	//JSR graphics.UpdateAndWait
 	JMP start
 
 HLT
+
