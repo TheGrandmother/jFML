@@ -227,6 +227,13 @@ public class VFml extends JFrame implements ActionListener {
 			if (v.tick_once) {
 				v.tick_once = false;
 			}
+			
+			if (v.vm.halt_flag){
+				v.fillLabels();
+				v.running = false;
+				v.run.setSelected(false);
+			}
+			
 		}
 
 	}
