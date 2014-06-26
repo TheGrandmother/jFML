@@ -506,6 +506,7 @@ public class VFml extends JFrame implements ActionListener {
 
 	public void error(Exception e) {
 		JOptionPane.showMessageDialog(big, "Error: \n" + e.toString());
+		fillLabels();
 	}
 
 }

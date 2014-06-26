@@ -216,15 +216,18 @@ public class Vm {
 	 */
 	private void executeOperation() throws InvalidAddressExcption,
 			StackEmptyException, InvalidInstructionException {
+		int tmp_addr;
+		int tmp;
+		
 		switch (operation) {
 		// INC
 		case 1:
-			if ((a1_code & 0b0100) != 0) {
+			if ((a1_code & 0b1000) != 0 || (a1_code == 0b0011)) {
 				throw new InvalidInstructionException(
 						"Impropper argument given to INC instruction: "
 								+ Integer.toHexString(a1_code));
 			}
-			switch (a1_code & 0b0011) {
+			switch (a1_code & 0b0111) {
 
 			case 0:
 				s.push(s.pop() + 1);
@@ -236,6 +239,26 @@ public class Vm {
 			case 2:
 				y.inc();
 				break;
+			case 4:
+				tmp_addr = s.pop();
+				tmp = ram.read(s.pop());
+				ram.write(tmp+1,tmp_addr);
+				
+				break;
+			case 5:
+				tmp = ram.read(x.read());
+				ram.write(tmp+1, x.read());
+				break;
+			case 6:
+				tmp = ram.read(y.read());
+				ram.write(tmp+1, y.read());
+				break;
+			case 7:
+				tmp = ram.read(ram.read(pc.getAddress() + 1));
+				ram.write(tmp+1, ram.read(pc.getAddress() + 1));
+				increment_offset += 1;
+				break;
+			
 
 			default:
 				throw new InvalidInstructionException(
@@ -245,12 +268,12 @@ public class Vm {
 			break;
 		// DEC
 		case 2:
-			if ((a1_code & 0b0100) != 0) {
+			if ((a1_code & 0b1000) != 0|| (a1_code == 0b0011)) {
 				throw new InvalidInstructionException(
 						"Impropper argument given to DEC instruction: "
 								+ Integer.toHexString(a1_code));
 			}
-			switch (a1_code & 0b0011) {
+			switch (a1_code & 0b0111) {
 			case 0:
 				s.push(s.pop() - 1);
 				break;
@@ -260,6 +283,25 @@ public class Vm {
 				break;
 			case 2:
 				y.dec();
+				break;
+			case 4:
+				tmp_addr = s.pop();
+				tmp = ram.read(s.pop());
+				ram.write(tmp-1,tmp_addr);
+				
+				break;
+			case 5:
+				tmp = ram.read(x.read());
+				ram.write(tmp-1, x.read());
+				break;
+			case 6:
+				tmp = ram.read(y.read());
+				ram.write(tmp-1, y.read());
+				break;
+			case 7:
+				tmp = ram.read(ram.read(pc.getAddress() + 1));
+				ram.write(tmp-1, ram.read(pc.getAddress() + 1));
+				increment_offset += 1;
 				break;
 
 			default:

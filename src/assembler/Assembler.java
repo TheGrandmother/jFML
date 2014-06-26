@@ -564,17 +564,17 @@ public class Assembler {
 			}
 		}
 
-		// Here we do some horrible error checking
+		// Here we do some horrible argument checking
 		if (action == 12 && a2 == 0b0011) {
 			throw new SyntaxError(
 					"You can't move stuff to a numeric constant here: " + line);
 		}
-		if ((operation == 1 || operation == 2)
-				&& !(a1 == 0b0000 || a1 == 0b0001 || a1 == 0b0010)) {
-			throw new SyntaxError(
-					"You can only increment/decrement the registers or the stack: "
-							+ line);
-		}
+//		if ((operation == 1 || operation == 2)
+//				&& !(a1 == 0b0000 || a1 == 0b0001 || a1 == 0b0010)) {
+//			throw new SyntaxError(
+//					"You can only increment/decrement the registers or the stack: "
+//							+ line);
+//		}
 
 		instruction = a1;
 		instruction = instruction | (a2 << 4);
