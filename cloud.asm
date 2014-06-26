@@ -15,6 +15,7 @@ MOV s $y_pos
 MOV $y_pos $y_middle
 MOV 0x000 $std.screen.color
 MOV 0xCAFE y
+JSR graphics.Clear
 #start
 
 //UPDATE PIXEL POSITION

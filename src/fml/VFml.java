@@ -42,7 +42,10 @@ import components.Vm;
  */
 public class VFml extends JFrame implements ActionListener {
 
-	int memory_size = 1_000_000;
+	int memory_size = 0xFFF_FFF;
+	int screen_width = 640;
+	int screen_height = 480;
+	int scaling_factor = 2;
 	Vm vm = new Vm(memory_size);
 	Screen screen;
 
@@ -243,7 +246,7 @@ public class VFml extends JFrame implements ActionListener {
 		super();
 		time = System.currentTimeMillis();
 
-		screen = new Screen(320, 200, 3);
+		screen = new Screen(screen_width, screen_height, scaling_factor);
 		loadFile("standard/standard.mem", Ram.screen_start);
 		loadFile("standard/font.mem", Ram.charset_start);
 		populateScreen();
@@ -349,15 +352,15 @@ public class VFml extends JFrame implements ActionListener {
 		x_reg_value.setText("" + Integer.toHexString(vm.x.read()));
 		y_reg_value.setText("" + Integer.toHexString(vm.y.read()));
 		addr_value.setText("" + Integer.toHexString(vm.pc.getAddress()));
-		try {
-			virtual_addr_value
-					.setText(""
-							+ Integer.toHexString(vm.ram.resolvePA(vm.pc
-									.getAddress())));
-		} catch (InvalidAddressExcption e1) {
-			// TODO Auto-generated catch block
-			e1.printStackTrace();
-		}
+//		try {
+//			virtual_addr_value
+//					.setText(""
+//							+ Integer.toHexString(vm.ram.resolvePA(vm.pc
+//									.getAddress())));
+//		} catch (InvalidAddressExcption e1) {
+//			// TODO Auto-generated catch block
+//			e1.printStackTrace();
+//		}
 		stack_size_value.setText("" + vm.s.getSize() + "(" + vm.s.peek() + ")");
 
 		try {

@@ -3,15 +3,15 @@ package components;
 public class Ram {
 	int[] ram;
 	
-	static int shared_start = 800_000;
-	public static int screen_start = 900_000;
-	public static int screen_end = 964_000;
-	public static int update_bit = 964_001;
-	static int page_index = 964_002;
-	static int page_enable = 964_003;
-	public static int timer_address =964_004;
-	static int page_size = 1000;
-	public static int charset_start = 964005;
+	static int shared_start = 0xF00_000;
+	public static int screen_start = 0xF00_000;
+	public static int screen_end = 0xF4B_000;
+	public static int update_bit = 0xF4B_001;
+	//static int page_index = 964_002;
+	//static int page_enable = 964_003;
+	//static int page_size = 1000;
+	public static int timer_address =0xF4B_003;
+	public static int charset_start = 0xF4B_004;
 	
 	
 	public Ram(int size){
@@ -121,12 +121,12 @@ public class Ram {
 		return s;
 	}
 	
-	public int resolvePA(int va) throws InvalidAddressExcption{
-		if(va <= shared_start && (read(page_enable)==1)){
-			return va + (page_index*page_size);
-		}else{
-			return va;
-		}
-	}
+//	public int resolvePA(int va) throws InvalidAddressExcption{
+//		if(va <= shared_start && (read(page_enable)==1)){
+//			return va + (page_index*page_size);
+//		}else{
+//			return va;
+//		}
+//	}
 	
 }
