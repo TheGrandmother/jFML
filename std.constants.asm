@@ -7,7 +7,7 @@
 !std.screen.height = 480
 !std.screen.color = 0xF4B_002
 !std.screen.update_bit = 0xF4B_001
-!std.page_index = 964002
-!std.page_enable = 964003
 !std.timer_address = 0xF4B_003
 !std.page_size = 1000
+
+!std.irq_table_start = 0xF4C_000

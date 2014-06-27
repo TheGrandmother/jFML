@@ -10,6 +10,8 @@ import java.awt.GridLayout;
 import java.awt.HeadlessException;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.KeyEvent;
+import java.awt.event.KeyListener;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
@@ -35,7 +37,8 @@ import components.Ram.InvalidAddressExcption;
 import components.Vm;
 
 /**
- * This is a very basic class to handle the running of the FML machine. It basicly just provides a GUI
+ * This is a very basic class to handle the running of the FML machine. It
+ * basicly just provides a GUI
  * 
  * 
  * @author TheGrandmother
@@ -48,6 +51,7 @@ public class VFml extends JFrame implements ActionListener {
 	int scaling_factor = 2;
 	Vm vm = new Vm(memory_size);
 	Screen screen;
+	int screen_update_time = 1;
 
 	boolean debug = false;
 
@@ -115,10 +119,10 @@ public class VFml extends JFrame implements ActionListener {
 	JTextField in_file = new JTextField("Input File");
 	JLabel halt_label = new JLabel("Halt Flag: ");
 	JLabel halt_flag_value = new JLabel("void");
-	JLabel irq1_flag = new JLabel("IRQ1: ");
-	JLabel irq2_flag = new JLabel("IRQ2: ");
-	JLabel irq1_flag_value = new JLabel("void");
-	JLabel irq2_flag_value = new JLabel("void");
+	JLabel running_label = new JLabel("Running: ");
+	JLabel running_label_value = new JLabel("void");
+	JLabel interrupt_label = new JLabel("Interrupt: ");
+	JLabel interrupt_value = new JLabel("void");
 	JLabel x_reg = new JLabel("X: ");
 	JLabel x_reg_value = new JLabel("void");
 	JLabel y_reg = new JLabel("Y: ");
@@ -146,59 +150,62 @@ public class VFml extends JFrame implements ActionListener {
 	JButton assemble_and_load = new JButton("Assemble and load");
 
 	long time;
-	int screen_update_time = 33;
 
-	public static void main(String[] args) {
-		// TODO Auto-generated method stub
+	public synchronized static void main(String[] args) {
+
 		VFml v = new VFml();
 
 		v.setVisible(true);
 		v.pack();
 		v.fillLabels();
 		v.vm.halt_flag = false;
-
+		
 		long time = 0;
 		long dbg_time = System.nanoTime();
 		long big_time = 0;
 		long cyles_dbg = 0;
-
 		long dbg_wait_time = 1_000_000_000;
-		int burst_length = 10;
 
 		while (true) {
-			if (v.running || v.tick_once) {
 
+			if (v.running || v.tick_once) {
+				//System.out.println("End of loop????");
+				//System.out.println("Start of loop");
+				
 				if ((v.vm.cycles % 1000000 == 0) || v.tick_once) {
 					v.fillLabels();
 				}
-
+				
 				try {
-					if(!v.tick_once){
-					//We run a sequence of vm steps like this to increase the efective number of steps per second.
-					v.vm.step();v.vm.step();v.vm.step();v.vm.step();v.vm.step();
-					v.vm.step();v.vm.step();v.vm.step();v.vm.step();v.vm.step();
-					v.vm.step();v.vm.step();v.vm.step();v.vm.step();v.vm.step();
-					v.vm.step();v.vm.step();v.vm.step();v.vm.step();v.vm.step();
-					v.vm.step();v.vm.step();v.vm.step();v.vm.step();v.vm.step();
-					v.vm.step();v.vm.step();v.vm.step();v.vm.step();v.vm.step();
-					v.vm.step();v.vm.step();v.vm.step();v.vm.step();v.vm.step();
-					v.vm.step();v.vm.step();v.vm.step();v.vm.step();v.vm.step();
-					v.vm.step();v.vm.step();v.vm.step();v.vm.step();v.vm.step();
-					v.vm.step();v.vm.step();v.vm.step();v.vm.step();v.vm.step();
-					}else{
+					
+					if (!v.tick_once) {
+						// We run a sequence of vm steps like this to increase
+						// the effective number of steps per second.
+						v.vm.step();v.vm.step();v.vm.step();v.vm.step();v.vm.step();
+						v.vm.step();v.vm.step();v.vm.step();v.vm.step();v.vm.step();
+						v.vm.step();v.vm.step();v.vm.step();v.vm.step();v.vm.step();
+						v.vm.step();v.vm.step();v.vm.step();v.vm.step();v.vm.step();
+						v.vm.step();v.vm.step();v.vm.step();v.vm.step();v.vm.step();
+						v.vm.step();v.vm.step();v.vm.step();v.vm.step();v.vm.step();
+						v.vm.step();v.vm.step();v.vm.step();v.vm.step();v.vm.step();
+						v.vm.step();v.vm.step();v.vm.step();v.vm.step();v.vm.step();
+						v.vm.step();v.vm.step();v.vm.step();v.vm.step();v.vm.step();
+						v.vm.step();v.vm.step();v.vm.step();v.vm.step();v.vm.step();
+					} else {
 						v.vm.step();
 					}
-					
+
 					if (v.debug) {
 						big_time = System.nanoTime() - dbg_time;
 						if (big_time >= dbg_wait_time) {
-							System.out
-									.println("Effective cycles per second:\n"+(int)(((double) v.vm.cycles - cyles_dbg)
+							System.out.println("Effective cycles per second:\n"
+									+ (int) (((double) v.vm.cycles - cyles_dbg)
 											/ (big_time) * 1_000_000_000.0));
-							System.out.println("Actual cyle time:\n"+ (v.vm.timers[4][0]/v.vm.timers[4][1]));
-							System.out.println("Actual cyles per second:\n"+
-									(int)((1.0/(v.vm.timers[4][0]/v.vm.timers[4][1]))*1_000_000_000)
-									);
+							System.out.println("Actual cyle time:\n"
+									+ (v.vm.timers[4][0] / v.vm.timers[4][1]));
+							System.out
+									.println("Actual cyles per second:\n"
+											+ (int) ((1.0 / (v.vm.timers[4][0] / v.vm.timers[4][1])) * 1_000_000_000));
 							System.out.println();
 							dbg_time = System.nanoTime();
 							cyles_dbg = v.vm.cycles;
@@ -225,23 +232,30 @@ public class VFml extends JFrame implements ActionListener {
 					e.printStackTrace();
 					v.running = false;
 				}
+				
+				
+				
 			}
-
+				
 			if (v.tick_once) {
+				v.fillLabels();
 				v.tick_once = false;
 			}
-			
-			if (v.vm.halt_flag){
+
+			if (v.vm.halt_flag) {
 				v.fillLabels();
 				v.running = false;
 				v.run.setSelected(false);
 			}
 			
+
 		}
 
 	}
 
-
+	static void annoyMe(){
+		System.out.println("This is annoying");
+	}
 	public VFml() {
 		super();
 		time = System.currentTimeMillis();
@@ -252,11 +266,53 @@ public class VFml extends JFrame implements ActionListener {
 		populateScreen();
 		screen.drawScreen();
 		screen.repaint();
+		screen.addKeyListener(new KeyListener() {
+			
+			@Override
+			public synchronized void keyTyped(KeyEvent e) {
+
+			}
+
+			@Override
+			public synchronized void keyPressed(KeyEvent e) {
+				//System.out.println((int) e.getKeyChar());
+				
+				if (running) {
+					try {
+						vm.ram.write((int) e.getKeyChar(), Ram.key_value);
+						vm.ram.write(1, Ram.key_down);
+						vm.interrupt = true;
+						vm.irq = 1;
+						System.out.println("BAAAAAALS");
+						
+
+					} catch (InvalidAddressExcption e1) {
+						// TODO Auto-generated catch block
+						e1.printStackTrace();
+					}
+					notifyAll();
+					return;
+				}
+
+			}
+
+			@Override
+			public synchronized void keyReleased(KeyEvent e) {
+				try {
+					vm.ram.write(0, Ram.key_down);
+				} catch (InvalidAddressExcption e1) {
+					// TODO Auto-generated catch block
+					e1.printStackTrace();
+				}
+				
+				return;
+				
+			}
+		});
 		System.setProperty("awt.useSystemAAFontSettings", "on");
 		System.setProperty("swing.aatext", "true");
 		setSize(800, 500);
 		this.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-
 		run.addActionListener(this);
 		run.setActionCommand("Run");
 
@@ -291,7 +347,7 @@ public class VFml extends JFrame implements ActionListener {
 		cons.weightx = 1;
 		cons.weighty = 1;
 		cons.gridx = 0;
-
+		
 		settings.add(run, cons);
 		settings.add(step, cons);
 		settings.add(reset, cons);
@@ -310,10 +366,10 @@ public class VFml extends JFrame implements ActionListener {
 		stats.setBorder(BorderFactory.createLineBorder(Color.gray, 1));
 		stats.add(halt_label);
 		stats.add(halt_flag_value);
-		stats.add(irq1_flag);
-		stats.add(irq1_flag_value);
-		stats.add(irq2_flag);
-		stats.add(irq2_flag_value);
+		stats.add(running_label);
+		stats.add(running_label_value);
+		stats.add(interrupt_label);
+		stats.add(interrupt_value);
 		stats.add(x_reg);
 		stats.add(x_reg_value);
 		stats.add(y_reg);
@@ -347,20 +403,20 @@ public class VFml extends JFrame implements ActionListener {
 
 	void fillLabels() {
 		halt_flag_value.setText("" + vm.halt_flag);
-		irq1_flag_value.setText("" + vm.irq1_flag);
-		irq2_flag_value.setText("" + vm.irq2_flag);
+		running_label_value.setText(""+running);
+		interrupt_value.setText(""+vm.interrupt);
 		x_reg_value.setText("" + Integer.toHexString(vm.x.read()));
 		y_reg_value.setText("" + Integer.toHexString(vm.y.read()));
 		addr_value.setText("" + Integer.toHexString(vm.pc.getAddress()));
-//		try {
-//			virtual_addr_value
-//					.setText(""
-//							+ Integer.toHexString(vm.ram.resolvePA(vm.pc
-//									.getAddress())));
-//		} catch (InvalidAddressExcption e1) {
-//			// TODO Auto-generated catch block
-//			e1.printStackTrace();
-//		}
+		// try {
+		// virtual_addr_value
+		// .setText(""
+		// + Integer.toHexString(vm.ram.resolvePA(vm.pc
+		// .getAddress())));
+		// } catch (InvalidAddressExcption e1) {
+		// // TODO Auto-generated catch block
+		// e1.printStackTrace();
+		// }
 		stack_size_value.setText("" + vm.s.getSize() + "(" + vm.s.peek() + ")");
 
 		try {
@@ -440,7 +496,7 @@ public class VFml extends JFrame implements ActionListener {
 
 		case "Load":
 			fc.setAcceptAllFileFilterUsed(false);
-			//fc.addChoosableFileFilter(mem_filter);
+			// fc.addChoosableFileFilter(mem_filter);
 			fc.showOpenDialog(big);
 			f = fc.getSelectedFile();
 			loadFile(f.getPath(), Integer.parseInt(memmory_start.getText()));
@@ -507,7 +563,8 @@ public class VFml extends JFrame implements ActionListener {
 	public void waitFor(int n) {
 		long time = System.currentTimeMillis();
 		while (System.currentTimeMillis() - time < n) {
-		};
+		}
+		;
 	}
 
 	public void updateTimer() throws InvalidAddressExcption {
@@ -518,5 +575,50 @@ public class VFml extends JFrame implements ActionListener {
 		JOptionPane.showMessageDialog(big, "Error: \n" + e.toString());
 		fillLabels();
 	}
+
+	public class InterruptRequest extends Exception {
+		int irq;
+
+		public InterruptRequest(int irq) {
+			super();
+			this.irq = irq;
+		}
+	}
+
+//	@Override
+//	public void keyTyped(KeyEvent e) {
+//
+//	}
+//
+//	@Override
+//	public void keyPressed(KeyEvent e) {
+//		System.out.println((int) e.getKeyChar());
+//		if (running) {
+//			try {
+//				vm.ram.write((int) e.getKeyChar(), Ram.key_value);
+//				vm.ram.write(1, Ram.key_down);
+//				vm.interrupt = true;
+//				vm.irq = 1;
+//
+//			} catch (InvalidAddressExcption e1) {
+//				// TODO Auto-generated catch block
+//				e1.printStackTrace();
+//			}
+//			return;
+//		}
+//
+//	}
+//
+//	@Override
+//	public void keyReleased(KeyEvent e) {
+//		try {
+//			vm.ram.write(0, Ram.key_down);
+//		} catch (InvalidAddressExcption e1) {
+//			// TODO Auto-generated catch block
+//			e1.printStackTrace();
+//		}
+//		return;
+//
+//	}
 
 }

@@ -44,8 +44,8 @@ public class ProgramCounter {
 	}
 	
 	public void subroutineJump(int target, int return_address){
-		address_pointer.write(target);
 		jump_stack.push(return_address);
+		address_pointer.write(target);
 	}
 	
 	public void returnJump() throws StackEmptyException{

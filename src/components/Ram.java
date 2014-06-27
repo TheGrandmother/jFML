@@ -7,11 +7,15 @@ public class Ram {
 	public static int screen_start = 0xF00_000;
 	public static int screen_end = 0xF4B_000;
 	public static int update_bit = 0xF4B_001;
-	//static int page_index = 964_002;
-	//static int page_enable = 964_003;
-	//static int page_size = 1000;
 	public static int timer_address =0xF4B_003;
 	public static int charset_start = 0xF4B_004;
+	public static int key_value = 0xF4B_F71;
+	public static int key_down = 0xF4B_F72;
+	
+	public static int irq_table_start = 0xF4C_000;
+	public static int irq_table_end = 0xF4C_00F;
+	public static int irq_0_interval = 0xF4C_010;
+	public static int irq_0_enable = 0xF4C_011;
 	
 	
 	public Ram(int size){

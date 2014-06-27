@@ -152,9 +152,9 @@ public class Assembler {
 				parseLine(s);
 
 			} catch (SyntaxError e) {
-				System.out.println("Syntax Error: " + "In file: " + file_name
-						+ ". At line: " + line_number);
-				System.out.println("\t" + e.getMessage());
+				System.out.println("Syntax Error: " + "\nIn file: " + file_name
+						+ ". \nAt line: " + line_number);
+				System.out.println(e.getMessage());
 				throw new AssemblerError("Failed to parse file: " + file_name);
 
 			}
@@ -567,7 +567,7 @@ public class Assembler {
 		// Here we do some horrible argument checking
 		if (action == 12 && a2 == 0b0011) {
 			throw new SyntaxError(
-					"You can't move stuff to a numeric constant here: " + line);
+					"You can't move stuff to a numeric constant here: \n" + line);
 		}
 //		if ((operation == 1 || operation == 2)
 //				&& !(a1 == 0b0000 || a1 == 0b0001 || a1 == 0b0010)) {

@@ -15,12 +15,13 @@ public class Vm {
 	public Stack s;
 	public ProgramCounter pc;
 	public Ram ram;
-	public boolean irq1_flag;
-	public boolean irq2_flag;
+	public boolean interrupt;
+	public int irq;
 	public boolean halt_flag;
 	/**
-	 * This field is necessary for the VM to keep track of weather or not it is executing a instruction which jumps.
-	 * Since if the machine jumps the step() method must not increment the program counter on its own.
+	 * This field is necessary for the VM to keep track of weather or not it is
+	 * executing a instruction which jumps. Since if the machine jumps the
+	 * step() method must not increment the program counter on its own.
 	 */
 	boolean jumping = false;
 	public long cycles;
@@ -33,13 +34,13 @@ public class Vm {
 	int operation;
 	int a1;
 	int a2;
-	
+
 	/**
-	 * This field keeps track of how much the step() method must increment the PC to get the 
-	 * correct address for the next instruction. 
+	 * This field keeps track of how much the step() method must increment the
+	 * PC to get the correct address for the next instruction.
 	 */
 	int increment_offset;
-	
+
 	final boolean debug_flag = false;
 
 	public Vm(int memory_size) {
@@ -48,8 +49,6 @@ public class Vm {
 		pc = new ProgramCounter();
 		ram = new Ram(memory_size);
 		s = new Stack(100);
-		irq1_flag = false;
-		irq2_flag = false;
 		halt_flag = true;
 		cycles = 0;
 		for (int i = 0; i < timers.length; i++) {
@@ -68,6 +67,11 @@ public class Vm {
 		// All the debug timers are commented out due to performance reasons.
 		// wierd_time = System.nanoTime();
 		if (halt_flag) {
+			return;
+		}
+		if(interrupt){
+			irqJump(irq);
+			interrupt =false;
 			return;
 		}
 		// time = System.nanoTime();
@@ -218,7 +222,7 @@ public class Vm {
 			StackEmptyException, InvalidInstructionException {
 		int tmp_addr;
 		int tmp;
-		
+
 		switch (operation) {
 		// INC
 		case 1:
@@ -242,23 +246,22 @@ public class Vm {
 			case 4:
 				tmp_addr = s.pop();
 				tmp = ram.read(s.pop());
-				ram.write(tmp+1,tmp_addr);
-				
+				ram.write(tmp + 1, tmp_addr);
+
 				break;
 			case 5:
 				tmp = ram.read(x.read());
-				ram.write(tmp+1, x.read());
+				ram.write(tmp + 1, x.read());
 				break;
 			case 6:
 				tmp = ram.read(y.read());
-				ram.write(tmp+1, y.read());
+				ram.write(tmp + 1, y.read());
 				break;
 			case 7:
 				tmp = ram.read(ram.read(pc.getAddress() + 1));
-				ram.write(tmp+1, ram.read(pc.getAddress() + 1));
+				ram.write(tmp + 1, ram.read(pc.getAddress() + 1));
 				increment_offset += 1;
 				break;
-			
 
 			default:
 				throw new InvalidInstructionException(
@@ -268,7 +271,7 @@ public class Vm {
 			break;
 		// DEC
 		case 2:
-			if ((a1_code & 0b1000) != 0|| (a1_code == 0b0011)) {
+			if ((a1_code & 0b1000) != 0 || (a1_code == 0b0011)) {
 				throw new InvalidInstructionException(
 						"Impropper argument given to DEC instruction: "
 								+ Integer.toHexString(a1_code));
@@ -287,20 +290,20 @@ public class Vm {
 			case 4:
 				tmp_addr = s.pop();
 				tmp = ram.read(s.pop());
-				ram.write(tmp-1,tmp_addr);
-				
+				ram.write(tmp - 1, tmp_addr);
+
 				break;
 			case 5:
 				tmp = ram.read(x.read());
-				ram.write(tmp-1, x.read());
+				ram.write(tmp - 1, x.read());
 				break;
 			case 6:
 				tmp = ram.read(y.read());
-				ram.write(tmp-1, y.read());
+				ram.write(tmp - 1, y.read());
 				break;
 			case 7:
 				tmp = ram.read(ram.read(pc.getAddress() + 1));
-				ram.write(tmp-1, ram.read(pc.getAddress() + 1));
+				ram.write(tmp - 1, ram.read(pc.getAddress() + 1));
 				increment_offset += 1;
 				break;
 
@@ -407,9 +410,10 @@ public class Vm {
 			break;
 		}
 	}
-	
+
 	/**
-	 * This method handles the execution of Action type instructions 
+	 * This method handles the execution of Action type instructions
+	 * 
 	 * @throws StackEmptyException
 	 * @throws InvalidAddressExcption
 	 * @throws InvalidInstructionException
@@ -424,20 +428,20 @@ public class Vm {
 			jumping = true;
 			pc.jump(a1);
 			break;
-			
+
 		// JSR
 		case 2:
 			resolveA1();
 			jumping = true;
 			pc.subroutineJump(a1, pc.getAddress() + increment_offset);
 			break;
-			
+
 		// RET
 		case 3:
 			jumping = true;
 			pc.returnJump();
 			break;
-			
+
 		// SEQ
 		case 4:
 			resolveA1();
@@ -494,7 +498,7 @@ public class Vm {
 				pc.jump(pc.getAddress() + increment_offset + skip_distance);
 			}
 			break;
-			
+
 		// JOO
 		case 7:
 			resolveA1();
@@ -504,7 +508,7 @@ public class Vm {
 			}
 			break;
 
-		//JOZ
+		// JOZ
 		case 8:
 			resolveA1();
 			if (s.pop() == 0) {
@@ -512,8 +516,8 @@ public class Vm {
 				pc.jump(a1);
 			}
 			break;
-		
-		//SOO
+
+		// SOO
 		case 9:
 			resolveA1();
 			if (s.pop() == 1) {
@@ -521,8 +525,8 @@ public class Vm {
 				pc.subroutineJump(a1, pc.getAddress() + increment_offset);
 			}
 			break;
-		
-		//SOZ
+
+		// SOZ
 		case 0xA:
 			resolveA1();
 			if (s.pop() == 0) {
@@ -530,13 +534,13 @@ public class Vm {
 				pc.subroutineJump(a1, pc.getAddress() + increment_offset);
 			}
 			break;
-			
-		//HLT
+
+		// HLT
 		case 0xB:
 			halt_flag = true;
 			break;
-			
-		//MOV
+
+		// MOV
 		case 0xC:
 
 			resolveA1();
@@ -564,6 +568,29 @@ public class Vm {
 		default:
 			throw new InvalidInstructionException(
 					"Something odd happened while executing an action");
+		}
+	}
+
+	public void irqJump(int irq) throws InvalidAddressExcption, IRQException {
+		if (irq > 15 || irq < 0) {
+			throw new IRQException("IRQ entry: " + irq + " is invalid.");
+		}
+		int target_address = ram.read(Ram.irq_table_start + irq);
+		if (target_address == 0) {
+			return;
+		} else {
+			pc.subroutineJump(target_address, pc.getAddress());
+		}
+
+	}
+
+	public class IRQException extends Exception {
+		public IRQException() {
+			super();
+		}
+
+		public IRQException(String message) {
+			super(message);
 		}
 	}
 
