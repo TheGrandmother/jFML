@@ -1,3 +1,5 @@
+//This is a halfdone graphics library.
+
 #graphics.INIT
 MOV 0xBABE y
 JSR graphics.UpdateAndWait

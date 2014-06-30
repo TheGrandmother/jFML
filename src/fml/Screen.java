@@ -2,11 +2,14 @@ package fml;
 
 import java.awt.Canvas;
 import java.awt.Color;
+import java.awt.Font;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.awt.Image;
 import java.awt.image.BufferedImage;
 import java.awt.image.WritableRaster;
+
+import components.Vm;
 
 public class Screen extends Canvas {
 
@@ -19,12 +22,20 @@ public class Screen extends Canvas {
 	Graphics2D g;
 	int buffer = 0;
 
-	public static Image getImageFromArray(int[] pixels, int width, int height) {
+	Boolean debug = false;
+
+	public Image getImageFromArray(int[] pixels, int width, int height) {
 		BufferedImage image = new BufferedImage(width, height,
 				BufferedImage.TYPE_INT_RGB);
 		WritableRaster raster = (WritableRaster) image.getRaster();
 		raster.setPixels(0, 0, width, height, pixels);
-		return image;
+		
+		BufferedImage rescaled = new BufferedImage(width * size, height
+				* size, BufferedImage.TYPE_INT_ARGB);
+		rescaled.getGraphics().drawImage(image, 0, 0, width * size,
+				height * size, null);
+		
+		return rescaled;
 	}
 
 	public Screen(int width, int height, int size) {
@@ -34,6 +45,8 @@ public class Screen extends Canvas {
 		this.width = width;
 		this.height = height;
 		this.size = size;
+		
+
 		buffer1 = new BufferedImage(width * size, height * size,
 				BufferedImage.TYPE_INT_ARGB);
 		buffer2 = new BufferedImage(width * size, height * size,
@@ -72,28 +85,66 @@ public class Screen extends Canvas {
 			buffer1 = (BufferedImage) getImageFromArray(bitmap, width, height);
 		}
 	}
-
-	public void paint(Graphics g1) {
-		Graphics2D g2 = ((Graphics2D) g1);
-
+	
+	public void drawDebug(Vm vm) {
 		if (buffer == 0) {
-			BufferedImage rescaled = new BufferedImage(width * size, height
-					* size, BufferedImage.TYPE_INT_ARGB);
-			rescaled.getGraphics().drawImage(buffer2, 0, 0, width * size,
-					height * size, null);
-			g2.drawImage(rescaled, null, 0, 0);
-			g2.dispose();
+			g = buffer2.createGraphics();
 		} else {
-			BufferedImage rescaled = new BufferedImage(width * size, height
-					* size, BufferedImage.TYPE_INT_ARGB);
-			rescaled.getGraphics().drawImage(buffer1, 0, 0, width * size,
-					height * size, null);
-			g2.drawImage(rescaled, null, 0, 0);
-			g2.dispose();
+			g = buffer1.createGraphics();
 		}
-		flip();
+		g.setFont(new Font(Font.MONOSPACED, Font.PLAIN, 10));
+		g.setColor(Color.GREEN);
+		int y_pos=10;
+		int y_increment = 10;
+		g.drawString("------------------", 1, y_pos);
+		y_pos += y_increment;
+		g.drawString("X\t:\t"+ vm.x.read()+"/"+Integer.toHexString(vm.x.read()), 1, y_pos);
+		y_pos += y_increment;
+		g.drawString("Y\t:\t"+ vm.y.read()+"/"+Integer.toHexString(vm.y.read()), 1, y_pos);
+		y_pos += y_increment;
+		g.drawString("Stack size\t:\t"+ vm.s.getSize(), 1, y_pos);
+		
+		y_pos += y_increment;
+		g.drawString("Current address\t:\t"+ vm.pc.getAddress()+"/"+Integer.toHexString(vm.pc.getAddress()), 1, y_pos);
 
 	}
+	public void paint(Graphics g1) {
+	Graphics2D g2 = ((Graphics2D) g1);
+
+	if (buffer == 0) {
+
+		g2.drawImage(buffer2, null, 0, 0);
+		g2.dispose();
+	} else {
+		g2.drawImage(buffer1, null, 0, 0);
+		g2.dispose();
+	}
+	flip();
+
+}
+
+//	public void paint(Graphics g1) {
+//		Graphics2D g2 = ((Graphics2D) g1);
+//
+//		if (buffer == 0) {
+//			BufferedImage rescaled = new BufferedImage(width * size, height
+//					* size, BufferedImage.TYPE_INT_ARGB);
+//			rescaled.getGraphics().drawImage(buffer2, 0, 0, width * size,
+//					height * size, null);
+//			g2.drawImage(rescaled, null, 0, 0);
+//			g2.dispose();
+//		} else {
+//			BufferedImage rescaled = new BufferedImage(width * size, height
+//					* size, BufferedImage.TYPE_INT_ARGB);
+//			rescaled.getGraphics().drawImage(buffer1, 0, 0, width * size,
+//					height * size, null);
+//			g2.drawImage(rescaled, null, 0, 0);
+//
+//			g2.dispose();
+//		}
+//		flip();
+//
+//	}
 
 	public void flip() {
 		if (buffer == 0) {

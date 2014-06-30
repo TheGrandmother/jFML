@@ -1,3 +1,5 @@
+//This is a halfdone library of standard functions.
+
 @std.random.current
 !std.random.modulo = 0x7FFFFFFF
 !std.random.multiplier = 0x7FFFFFED

@@ -4,13 +4,11 @@ A java implementation of the FML machine which i have designed.
 
 Basic Usage
 -----
-Run the VFml class.
-To see a very basic little example just hit the "Assemble And Load" button in the lower left corner. 
-Choose the cloud.asm file. Then just hit "Run".
-The "Assemble And Load" button assembles the chosen file. generates a output file with the same name but with a .fml file extension and then loads the assembled program into memory address 0.
-
-A more thorough usage guide will appear sometime in the future.
-Once I'm satisfied with the entire ISA i will write a proper documentation but the crap below here will serve as a general description of how the VM works.
+Run the VFml class. 
+Press Ctrl+Alt+A to Assemble and load a file. (cloud.asm is the only working interesting file)
+Press Ctrl+Alt+S to start the VM.
+Hold Ctrl+Alt+D to see debug information.
+Hold Ctrl+Alt+Q to pause the machine.
 
 
 Short ISA description
@@ -139,6 +137,7 @@ This means that it should reserve that address and the n next addresses.
 EX: #here+100
 Will make sure that the assembler puts nothing but
 zeroes for 100 addresses after the address of the #here label
+
 
 
 
