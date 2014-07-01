@@ -524,6 +524,14 @@ public class Assembler {
 				throw new SyntaxError("Wrong number of arguments: " + line);
 			}
 			break;
+			
+		case "SNE":
+			action = 13;
+			operation = 0;
+			if (arguments.length != 3) {
+				throw new SyntaxError("Wrong number of arguments: " + line);
+			}
+			break;
 
 		default:
 			throw new SyntaxError("Unknown mnemonic: " + line);

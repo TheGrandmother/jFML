@@ -80,8 +80,7 @@ Short ISA description
  10 | SOZ
  11 | HLT
  12 | MOV
- 13 | XOR
-	
+ 13 | SNE
 #####Explanations:
 						
   Menonic 	|   Description	      
@@ -95,22 +94,23 @@ Short ISA description
  MUL | s := a1 * a2   
  DIV | s := a1 / a2   
  MOD | s := a1 % a2   
- EQL | s := a1 == a2  
+ EQL | s := a1 = a2  
  GRT | s := a1 > a2   
  LES | s := a1 < a2   
  AND | s := a1 and a2 
  OOR | s := a1 or a2  
  XOR | s := a1 xor a2 
  NOT | s := not a1    
- NOT | (s := a1 << a2) if a2 < 0 othewrwise (s := a1 >> -a2)    
+ NOT | (s := a1 << a2) if a2 < 0 otherwise (s := a1 >> -a2)    
  JMP | Jump to a1           
  JSR | Jump to subroutine at a1              
  RET | Return from subroutine               
- SEQ | Skip on a1 == a2
+ SEQ | Skip on a1 = a2
+ SNE | Skip on a1 != a2
  SGR | Skip on a1 > a2
  SLE | Skip on a1 < a2
- JOO | Jump to a1 if s == 1
- JOZ | Jump to a1 if s == 0
+ JOO | Jump to a1 if s = 1
+ JOZ | Jump to a1 if s = 0
  SOO | Jump to subroutine a1 if s = 1
  SOZ | Jump to subroutine a1 if s = 0
  HLT | Halt 

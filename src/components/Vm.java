@@ -542,7 +542,6 @@ public class Vm {
 
 		// MOV
 		case 0xC:
-
 			resolveA1();
 			if (a2_code == 0b0000) {
 				s.push(a1);
@@ -565,6 +564,28 @@ public class Vm {
 						"Invalid destination for move operation.");
 			}
 			break;
+			
+			// SNE
+			case 0xD:
+				resolveA1();
+				resolveA2();
+				if (a1 != a2) {
+					jumping = true;
+					int next_instruction = ram.read(pc.getAddress()
+							+ increment_offset);
+					int skip_distance = 1;
+					if ((next_instruction & 0b0000_0000_0000_1011) == 0b0011) {
+						skip_distance++;
+					}
+					if ((next_instruction & 0b0000_0000_1011_0000) == 0b0011_0000) {
+						skip_distance++;
+					}
+					pc.jump(pc.getAddress() + increment_offset + skip_distance);
+				}
+				break;
+		
+			
+			
 		default:
 			throw new InvalidInstructionException(
 					"Something odd happened while executing an action");
