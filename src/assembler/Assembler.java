@@ -3,9 +3,11 @@ package assembler;
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.io.Reader;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedList;
@@ -18,7 +20,7 @@ import com.sun.corba.se.spi.ior.MakeImmutable;
  * This is an Assembler for the FML machine.
  * 
  * @author TheGrandmother
- *
+ * 
  */
 public class Assembler {
 
@@ -33,13 +35,14 @@ public class Assembler {
 	HashMap<String, Pointer> pointer_map;
 	HashMap<String, Label> label_map;
 	HashMap<String, Constant> constant_map;
+	HashMap<String, Boolean> file_map;
 	LinkedList<Token> token_list;
 	LinkedList<Integer> machinecode_list;
 	int current_address;
 	int start_address;
 	static final String int_regex = "((-?0x[a-fA-F[0-9]]+)|(-?\\d+))";
 	static final String raw_regex = ":" + int_regex;
-	static final String include_regex = "<\\s*[\\w.-]+\\.asm";
+	static final String include_regex = "<\\s*[\\w.-]+((\\.asm)|(\\.mem))";
 	static final String pointer_regex = "@\\s*\\D[\\w.-]+\\s*(\\+\\s*"
 			+ int_regex + ")?";
 	static final String label_regex = "#\\s*\\D[\\w.-]+";
@@ -52,6 +55,7 @@ public class Assembler {
 		pointer_map = new HashMap<String, Pointer>();
 		label_map = new HashMap<String, Label>();
 		constant_map = new HashMap<String, Constant>();
+		file_map = new HashMap<String,Boolean>();
 		token_list = new LinkedList<Token>();
 		machinecode_list = new LinkedList<Integer>();
 		current_address = default_start_address;
@@ -97,14 +101,12 @@ public class Assembler {
 			e.printStackTrace();
 		}
 
-		for (Token p : a.token_list) {
-			p.print();
-		}
+	//	for (Token p : a.token_list) {
+	//		p.print();
+	//	}
 
-
-			a.resolvePointers();
-			a.resolveAllRefernces();
-
+		a.resolvePointers();
+		a.resolveAllRefernces();
 
 		try {
 			File output_file = new File(a.out_name);
@@ -137,7 +139,7 @@ public class Assembler {
 	static String beautify(String s) {
 		return s.trim().replaceAll("_", "").replaceAll("/.*", "");
 	}
-	
+
 	public void scanFile(String file_name) throws IOException, AssemblerError {
 
 		BufferedReader reader = new BufferedReader(new FileReader(file_name));
@@ -148,7 +150,6 @@ public class Assembler {
 		while ((s = reader.readLine()) != null) {
 			current_file = file_name;
 			try {
-
 				parseLine(s);
 
 			} catch (SyntaxError e) {
@@ -169,19 +170,8 @@ public class Assembler {
 		String pretty_line = beautify(line).trim();
 		if (pretty_line.matches("\\s*") || pretty_line == "") {
 			return;
-		}else if (pretty_line.matches(include_regex)) {
-			int temp_line_number = line_number;
-			try {
-
-				scanFile(pretty_line.substring(pretty_line.indexOf("<") + 1)
-						.trim());
-
-			} catch (IOException e) {
-				throw new SyntaxError("I/O error: " + e.getMessage());
-			}
-
-			line_number = temp_line_number;
-
+		} else if (pretty_line.matches(include_regex)) {
+			readFile(pretty_line);
 		} else if (pretty_line.matches(raw_regex)) {
 			parseRaw(pretty_line);
 		} else if (pretty_line.matches(constant_regex)) {
@@ -244,6 +234,60 @@ public class Assembler {
 			throw new SyntaxError(e.getMessage());
 		}
 
+	}
+
+	void readFile(String line) throws AssemblerError, SyntaxError {
+		int temp_line_number;
+		
+		String file_name = line.substring(line.indexOf("<") + 1).trim();
+		String extension = file_name.substring(file_name.length() - 4,
+				file_name.length());
+//		System.out.println("Read another file namley: " + file_name);
+//		System.out.println("extension: " + extension);
+		if (extension.matches("\\.asm")) {
+
+			temp_line_number = line_number;
+			if (file_map.containsKey(file_name)) {
+				return;
+			}
+			try {
+				scanFile(file_name);
+
+			} catch (IOException e) {
+				throw new SyntaxError("I/O error: " + e.getMessage());
+			}
+			file_map.put(file_name, true);
+
+			line_number = temp_line_number;
+			
+//			System.out.println("Read another file namley: " + file_name);
+			return;
+			
+			
+		} else if (extension.matches("\\.mem")) {
+			
+			current_file = file_name;
+			try {
+				BufferedReader reader = new BufferedReader(new FileReader(
+						file_name));
+
+				String s;
+				while ((s = reader.readLine()) != null) {
+					parseRaw(s);
+					line_number++;
+				}
+				reader.close();
+				
+			} catch (FileNotFoundException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			} catch (IOException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+			return;
+
+		}
 	}
 
 	void parseInstruction(String line) throws SyntaxError {
@@ -567,14 +611,15 @@ public class Assembler {
 		// Here we do some horrible argument checking
 		if (action == 12 && a2 == 0b0011) {
 			throw new SyntaxError(
-					"You can't move stuff to a numeric constant here: \n" + line);
+					"You can't move stuff to a numeric constant here: \n"
+							+ line);
 		}
-//		if ((operation == 1 || operation == 2)
-//				&& !(a1 == 0b0000 || a1 == 0b0001 || a1 == 0b0010)) {
-//			throw new SyntaxError(
-//					"You can only increment/decrement the registers or the stack: "
-//							+ line);
-//		}
+		// if ((operation == 1 || operation == 2)
+		// && !(a1 == 0b0000 || a1 == 0b0001 || a1 == 0b0010)) {
+		// throw new SyntaxError(
+		// "You can only increment/decrement the registers or the stack: "
+		// + line);
+		// }
 
 		instruction = a1;
 		instruction = instruction | (a2 << 4);

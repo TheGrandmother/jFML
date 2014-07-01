@@ -1,5 +1,6 @@
 //This is a halfdone graphics library.
-
+< std.constants.asm
+< std.asm
 #graphics.INIT
 MOV 0xBABE y
 JSR graphics.UpdateAndWait

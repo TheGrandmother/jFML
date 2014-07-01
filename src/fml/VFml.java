@@ -49,6 +49,7 @@ public class VFml extends JFrame implements KeyListener{
 					fml.runMe();
 				} catch (Exception e) {
 					fml.error(e);
+					fml.running =false;
 				}
 			}	
 		
@@ -90,10 +91,10 @@ public class VFml extends JFrame implements KeyListener{
 		
 		if(running || tick_once){
 			vm.step();
-			updateScreen();
+			
 			//System.out.println("cycle: " + vm.cycles);
 		}
-		
+		updateScreen();
 		vm.ram.write((int) System.currentTimeMillis(),
 				Ram.timer_address);
 		//wait(1);
