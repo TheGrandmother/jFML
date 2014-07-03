@@ -125,12 +125,4 @@ public class Ram {
 		return s;
 	}
 	
-//	public int resolvePA(int va) throws InvalidAddressExcption{
-//		if(va <= shared_start && (read(page_enable)==1)){
-//			return va + (page_index*page_size);
-//		}else{
-//			return va;
-//		}
-//	}
-	
 }

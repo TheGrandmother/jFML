@@ -36,6 +36,10 @@ public class VFml extends JFrame implements KeyListener{
 	boolean running = false;
 	boolean tick_once = false;
 	boolean debug = false;
+
+	
+
+	
 	
 	Vm vm;
 	Screen screen;
@@ -43,14 +47,25 @@ public class VFml extends JFrame implements KeyListener{
 	
 	public static  void main(String[] args) {
 		VFml fml = new VFml();
-	
+		boolean big_dbg = true;
+		long dbg_time = System.currentTimeMillis();
+		long elapsed_time = 1;
+		int dbg_interval = 1_000_000;
+		long prev_cycles = 0;
 			
 		
 		fml.vm.halt_flag = false;
 			while(true){
 				try {
-					
 					fml.runMe();
+					if (big_dbg && (System.currentTimeMillis() - dbg_time >= 1000)) {
+						elapsed_time = System.currentTimeMillis() - dbg_time;
+						System.out.println(fml.vm.cycles-prev_cycles);
+						System.out.println(elapsed_time);
+						
+						prev_cycles = fml.vm.cycles;
+						dbg_time = System.currentTimeMillis();
+					}
 				} catch (Exception e) {
 					fml.error(e);
 					fml.running =false;
@@ -192,14 +207,14 @@ public class VFml extends JFrame implements KeyListener{
 			return;
 		}
 		String[] args = { f.getPath(),
-				f.getName().replaceAll(".asm", ".fml"), "0" };
+				"tmp.fml", "0" };
 		try {
 			Assembler.main(args);
 		} catch (AssemblerError e1) {
 			error(e1);
 			return;
 		}
-		loadFile(f.getName().replaceAll(".asm", ".fml"), 0);
+		loadFile("tmp.fml", 0);
 		
 		
 		

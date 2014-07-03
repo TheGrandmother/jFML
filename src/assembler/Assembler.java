@@ -42,7 +42,7 @@ public class Assembler {
 	int start_address;
 	static final String int_regex = "((-?0x[a-fA-F[0-9]]+)|(-?\\d+))";
 	static final String raw_regex = ":" + int_regex;
-	static final String include_regex = "<\\s*[\\w.-]+((\\.asm)|(\\.mem))";
+	static final String include_regex = "<\\s*[\\w.-/]+((\\.asm)|(\\.mem))\\s*";
 	static final String pointer_regex = "@\\s*\\D[\\w.-]+\\s*(\\+\\s*"
 			+ int_regex + ")?";
 	static final String label_regex = "#\\s*\\D[\\w.-]+";
@@ -137,7 +137,7 @@ public class Assembler {
 	}
 
 	static String beautify(String s) {
-		return s.trim().replaceAll("_", "").replaceAll("/.*", "");
+		return s.trim().replaceAll("_", "").replaceAll("(//).*", "");
 	}
 
 	public void scanFile(String file_name) throws IOException, AssemblerError {

@@ -64,8 +64,7 @@ public class Vm {
 	 * @throws Exception
 	 */
 	public void step() throws Exception {
-		// All the debug timers are commented out due to performance reasons.
-		// wierd_time = System.nanoTime();
+
 		if (halt_flag) {
 			return;
 		}
@@ -74,7 +73,7 @@ public class Vm {
 			interrupt =false;
 			return;
 		}
-		// time = System.nanoTime();
+
 		int instruction = -1;
 		try {
 			instruction = ram.read(pc.getAddress());
@@ -83,50 +82,31 @@ public class Vm {
 			halt_flag = true;
 			return;
 		}
-		// timers[3][0] += System.nanoTime()-time;
-		// timers[3][1]++;
-		//
-		// time = System.nanoTime();
+
 		instructionBreakdown(instruction);
-		// timers[2][0] += System.nanoTime()-time;
-		// timers[2][1]++;
 
 		increment_offset = 1;
 
 		jumping = false;
 
-		// dbg("Instruction: " + Integer.toHexString(instruction)+ "\n"
-		// + "Action: " + Integer.toHexString(action) + " Operation: " +
-		// Integer.toHexString(operation)
-		// + " a1(code): " +Integer.toHexString(a1_code)+ " a2(code): "
-		// +Integer.toHexString(a2_code) +"\n");
-
 		if (!(action == 0 && operation == 0)) {
 			if (action == 0 && operation != 0) {
-				// time = System.nanoTime();
+
 				executeOperation();
-				// timers[0][0] += System.nanoTime()-time;
-				// timers[0][1]++;
-				// dbg("Executing Operation.");
+
 			} else if (action != 0 && operation == 0) {
-				// time = System.nanoTime();
+
 				executeAction();
-				// timers[1][0] += System.nanoTime()-time;
-				// timers[1][1]++;
-				// dbg("Executing Action.");
+
 			}
 
 		}
-		// dbg("Increment offsett: " + increment_offset);
 
 		if (!jumping) {
 			pc.increment(increment_offset);
 		}
 
 		cycles++;
-		// dbg("\n");
-		// timers[4][0] += System.nanoTime()-wierd_time;
-		// timers[4][1]++;
 	}
 
 	/**
@@ -583,9 +563,7 @@ public class Vm {
 					pc.jump(pc.getAddress() + increment_offset + skip_distance);
 				}
 				break;
-		
-			
-			
+
 		default:
 			throw new InvalidInstructionException(
 					"Something odd happened while executing an action");
@@ -623,12 +601,6 @@ public class Vm {
 
 		public InvalidInstructionException(String message) {
 			super(message);
-		}
-	}
-
-	public void dbg(String message) {
-		if (debug_flag) {
-			System.out.println(message);
 		}
 	}
 
