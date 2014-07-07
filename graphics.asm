@@ -153,7 +153,17 @@ HLT
 		JMP graphics.Clear.loop
 		RET
 
-
+#graphics.QuickPutPixel
+	MOV s x
+	MOV s y
+	ADD x std.screen.start
+	MOV s x
+	MUL y std.screen.width
+	ADD s x
+	MOV $std.screen.color $s
+	RET
+	HLT
+HLT
 //X is on top. Y is on bottom
 #graphics.PutPixel
 	MOV s x

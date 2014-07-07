@@ -26,7 +26,7 @@ public class VFml extends JFrame implements KeyListener{
 	int scaling_factor = 2;
 	int memory_size = 0xFFF_FFF;
 	
-	int refresh_rate = 1;
+	int refresh_rate = 40;
 	
 	long time;
 	long repeating_key_timer = 0;
@@ -47,7 +47,7 @@ public class VFml extends JFrame implements KeyListener{
 	
 	public static  void main(String[] args) {
 		VFml fml = new VFml();
-		boolean big_dbg = true;
+		boolean big_dbg = false;
 		long dbg_time = System.currentTimeMillis();
 		long elapsed_time = 1;
 		int dbg_interval = 1_000_000;
