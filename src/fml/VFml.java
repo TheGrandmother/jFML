@@ -47,10 +47,9 @@ public class VFml extends JFrame implements KeyListener{
 	
 	public static  void main(String[] args) {
 		VFml fml = new VFml();
-		boolean big_dbg = false;
+		boolean big_dbg = true;
 		long dbg_time = System.currentTimeMillis();
 		long elapsed_time = 1;
-		int dbg_interval = 1_000_000;
 		long prev_cycles = 0;
 			
 		
@@ -60,8 +59,10 @@ public class VFml extends JFrame implements KeyListener{
 					fml.runMe();
 					if (big_dbg && (System.currentTimeMillis() - dbg_time >= 1000)) {
 						elapsed_time = System.currentTimeMillis() - dbg_time;
-						System.out.println(fml.vm.cycles-prev_cycles);
-						System.out.println(elapsed_time);
+						System.out.println((int)(((double)fml.vm.cycles-prev_cycles)/(elapsed_time)) + " KHZ");
+						
+						System.out.println((int)((
+								1 / (((double)(fml.vm.cycles-prev_cycles)/elapsed_time)*1000))*1_000_000_000)+" ns per step");
 						
 						prev_cycles = fml.vm.cycles;
 						dbg_time = System.currentTimeMillis();
@@ -110,12 +111,8 @@ public class VFml extends JFrame implements KeyListener{
 		
 		if(running || tick_once){
 			vm.step();
-
 		}
 		updateScreen();
-		vm.ram.write((int) System.currentTimeMillis(),
-				Ram.timer_address);
-
 		
 	}
 	

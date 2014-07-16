@@ -6,6 +6,7 @@
 @y_orig
 @noise_x_offs
 @factor_thing
+@another_thing
 JSR graphics.Clear
 MOV 0xFFF s
 DIV s 2
@@ -15,6 +16,7 @@ MOV 0 $y_orig
 MOV 0 $x_pos
 MOV 0 $y_pos
 MOV 0 $noise_x_offs
+MOV 0 $another_thing
 #loop
 		MOV $y_pos s
 		MOV $x_pos s
@@ -22,7 +24,7 @@ MOV 0 $noise_x_offs
 		JSR graphics.SetColor
 		MOV $y_pos s
 		MOV $x_pos s
-		JSR graphics.QuickPutPixel
+		JSR graphics.PutPixel
 		INC $x_pos
 		ADD $x_orig 50
 		SEQ $x_pos s
@@ -37,7 +39,7 @@ DEC $x_orig
 MOV $y_orig s
 MOV $x_orig s
 MOV 0 $std.screen.color
-JSR graphics.QuickPutPixel
+JSR graphics.PutPixel
 INC $y_orig
 INC $x_orig
 
@@ -49,6 +51,13 @@ MOV $x_orig $x_pos
 MOV $y_orig $y_pos
 INC $y_orig
 INC $x_orig
+MOV $another_thing s
+MUL s 5
+JSR std.math.Sin
+DIV s 80
+ADD s $x_orig
+MOV s $x_orig
+INC $another_thing
 JMP loop
 HLT
 	

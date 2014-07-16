@@ -70,7 +70,7 @@ public class Vm {
 		}
 		if(interrupt){
 			irqJump(irq);
-			interrupt =false;
+			interrupt = false;
 			return;
 		}
 

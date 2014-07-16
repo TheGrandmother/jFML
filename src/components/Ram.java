@@ -29,6 +29,7 @@ public class Ram {
 	   
 	public int read(int addr) throws InvalidAddressExcption{
 		if(addr < 0 || addr >= ram.length){throw new InvalidAddressExcption("Address " + addr + " is not cool.");}
+		if(addr == timer_address){return (int)System.currentTimeMillis();}	
 		return ram[addr];
 	}
 	
