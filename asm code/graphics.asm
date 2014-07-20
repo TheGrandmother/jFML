@@ -235,8 +235,6 @@ HLT
 
 	#graphics.FillRectangle.outer
 		#graphics.FillRectangle.inner
-			MOV $graphics.FillRectangle.y_pos s
-			MOV $graphics.FillRectangle.x_pos s
 
 			ADD $graphics.FillRectangle.x_pos std.screen.start
 			MUL $graphics.FillRectangle.y_pos std.screen.width
