@@ -155,34 +155,40 @@ HLT
 #graphics.QuickPutPixel
 	MOV s x
 	MOV s y
-	//MOV s x
+	ADD x std.screen.start
+	MOV s x
 	MUL y std.screen.width
 	ADD s x
 	MOV $std.screen.color $s
+
 	RET
-	HLT
+
 HLT
 //X is on top. Y is on bottom
 #graphics.PutPixel
 	MOV s x
 	MOV s y
-	GRT x std.screen.width
+
+	GRT x std.screen.width					//Check that x is in bounds
 	JOO graphics.PutPixel.x_out_of_bounds
+
 	ADD x std.screen.start
 	MOV s x
-	GRT y std.screen.height
+
+	GRT y std.screen.height					//Check that y is in bounds
 	JOO graphics.PutPixel.y_out_of_bounds
+
 	MUL y std.screen.width
 	ADD s x
-	MOV $std.screen.color $s
+	MOV $std.screen.color $s				//addr = y*width+x
 	RET
-	HLT
+
 	#graphics.PutPixel.x_out_of_bounds
 		RET
-		HLT
+
 	#graphics.PutPixel.y_out_of_bounds
 		RET
-		HLT
+
 
 //X is on top. Y is on bottom
 #graphics.GetPixel
@@ -210,71 +216,40 @@ HLT
 		HLT
 
 //x0
+//y0
+//x1
 //y1
-//width
-//height
-@graphics.ClearRegion.x0
-@graphics.ClearRegion.y0
-@graphics.ClearRegion.x1
-@graphics.ClearRegion.y1
-@graphics.ClearRegion.x_pos
-@graphics.ClearRegion.y_pos
-#graphics.ClearRegion
-	MOV s $graphics.ClearRegion.x0
-	MOV s $graphics.ClearRegion.y0
-	MOV s $graphics.ClearRegion.x1
-	MOV s $graphics.ClearRegion.y1
-	MOV $graphics.ClearRegion.x0 $graphics.ClearRegion.x_pos
-	MOV $graphics.ClearRegion.y0 $graphics.ClearRegion.y_pos
-	#graphics.ClearRegion.outer
-		#graphics.ClearRegion.inner
-			MOV 0xBEEF y
-			MUL $graphics.ClearRegion.y_pos std.screen.width
-			ADD s $graphics.ClearRegion.x_pos
-			MOV 0 $s
-			INC $graphics.ClearRegion.x_pos
-			SEQ $graphics.ClearRegion.x_pos $graphics.ClearRegion.x1
-				JMP graphics.ClearRegion.inner
-		MOV 0xCAFE y
-		MOV $graphics.ClearRegion.x0 $graphics.ClearRegion.x_pos
-		INC $graphics.ClearRegion.y_pos
-		SEQ $graphics.ClearRegion.y_pos $graphics.ClearRegion.y1
-				JMP graphics.ClearRegion.outer
-	RET
+@graphics.FillRectangle.x0
+@graphics.FillRectangle.y0
+@graphics.FillRectangle.x1
+@graphics.FillRectangle.y1
+@graphics.FillRectangle.x_pos
+@graphics.FillRectangle.y_pos
+#graphics.FillRectangle
+	MOV s $graphics.FillRectangle.x0
+	MOV s $graphics.FillRectangle.y0
+	MOV s $graphics.FillRectangle.x1
+	MOV s $graphics.FillRectangle.y1
+	MOV $graphics.FillRectangle.x0 $graphics.FillRectangle.x_pos
+	MOV $graphics.FillRectangle.y0 $graphics.FillRectangle.y_pos
 
-@graphics.FillRect.x0
-@graphics.FillRect.y0
-@graphics.FillRect.x1
-@graphics.FillRect.y1
-@graphics.FillRect.x_pos
-@graphics.FillRect.y_pos
-#graphics.FillRect
-	MOV s $graphics.FillRect.x0
-	MOV s $graphics.FillRect.y0
-	MOV s $graphics.FillRect.x1
-	MOV s $graphics.FillRect.y1
-	MOV $graphics.FillRect.x0 $graphics.FillRect.x_pos
-	MOV $graphics.FillRect.y0 $graphics.FillRect.y_pos
-	#graphics.FillRect.outer
-		#graphics.FillRect.inner
-			MOV 0xBEEF y
+	#graphics.FillRectangle.outer
+		#graphics.FillRectangle.inner
+			MOV $graphics.FillRectangle.y_pos s
+			MOV $graphics.FillRectangle.x_pos s
 
-			MOV $graphics.FillRect.y_pos s
-			MOV $graphics.FillRect.x_pos s
-			JSR graphics.QuickPutPixel
+			ADD $graphics.FillRectangle.x_pos std.screen.start
+			MUL $graphics.FillRectangle.y_pos std.screen.width
+			ADD s s
+			MOV $std.screen.color $s
 
-			JSR graphics.Update
-
-			INC $graphics.FillRect.x_pos
-			SGR $graphics.FillRect.x_pos $graphics.FillRect.x1
-				JMP graphics.FillRect.inner
-
-
-		MOV 0xCAFE y
-		MOV $graphics.FillRect.x0 $graphics.FillRect.x_pos
-		INC $graphics.FillRect.y_pos
-		SGR $graphics.FillRect.y_pos $graphics.FillRect.y1
-				JMP graphics.FillRect.outer
+			INC $graphics.FillRectangle.x_pos
+			SGR $graphics.FillRectangle.x_pos $graphics.FillRectangle.x1
+				JMP graphics.FillRectangle.inner
+		MOV $graphics.FillRectangle.x0 $graphics.FillRectangle.x_pos
+		INC $graphics.FillRectangle.y_pos
+		SGR $graphics.FillRectangle.y_pos $graphics.FillRectangle.y1
+			JMP graphics.FillRectangle.outer
 	RET
 
 
