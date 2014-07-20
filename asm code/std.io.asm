@@ -28,10 +28,12 @@ MOV 0xFEA1 y
 MOV std.io.charset_start $std.io.char_pointer
 MOV std.io.line_margin $std.io.x_pos
 MOV 0 $std.io.y_pos
+JMP std.io.ESCAPE
+
+
+
 ADD std.irq_table_start 1
 MOV std.io.KeyHandler $s
-
-
 
 MOV 0xAbed y
 JSR graphics.Clear
@@ -62,7 +64,6 @@ MOV 33 $temp_char
 JMP loop
 HLT
 
-//JMP std.io.ESCAPE
 
 HLT
 

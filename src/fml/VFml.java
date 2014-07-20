@@ -23,10 +23,10 @@ public class VFml extends JFrame implements KeyListener{
 
 	int screen_width =  640;
 	int screen_height = 480;
-	int scaling_factor = 2;
+	int scaling_factor = 1;
 	int memory_size = 0xFFF_FFF;
 	
-	int refresh_rate = 40;
+	int refresh_rate = 25;
 	
 	long time;
 	long repeating_key_timer = 0;
@@ -47,7 +47,7 @@ public class VFml extends JFrame implements KeyListener{
 	
 	public static  void main(String[] args) {
 		VFml fml = new VFml();
-		boolean big_dbg = true;
+		boolean big_dbg = false;
 		long dbg_time = System.currentTimeMillis();
 		long elapsed_time = 1;
 		long prev_cycles = 0;
@@ -95,7 +95,8 @@ public class VFml extends JFrame implements KeyListener{
 		System.setProperty("awt.useSystemAAFontSettings", "on");
 		System.setProperty("swing.aatext", "true");
 		this.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-		
+		setResizable(false);
+		setSize(screen_width*scaling_factor, screen_height*scaling_factor);
 		add(screen);
 		screen.addKeyListener(this);
 		pack();

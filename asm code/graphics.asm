@@ -142,10 +142,9 @@ HLT
 	RET
 
 #graphics.Clear
-	MOV 0xC0FFE y
+
 	@graphics.Clear.tmp
 	mov std.screen.start x
-	//mov 0 $std.screen.color
 	#graphics.Clear.loop
 		MOV 0 $x
 		INC x
@@ -156,8 +155,7 @@ HLT
 #graphics.QuickPutPixel
 	MOV s x
 	MOV s y
-	ADD x std.screen.start
-	MOV s x
+	//MOV s x
 	MUL y std.screen.width
 	ADD s x
 	MOV $std.screen.color $s
@@ -210,6 +208,80 @@ HLT
 		MOV 0 s
 		RET
 		HLT
+
+//x0
+//y1
+//width
+//height
+@graphics.ClearRegion.x0
+@graphics.ClearRegion.y0
+@graphics.ClearRegion.x1
+@graphics.ClearRegion.y1
+@graphics.ClearRegion.x_pos
+@graphics.ClearRegion.y_pos
+#graphics.ClearRegion
+	MOV s $graphics.ClearRegion.x0
+	MOV s $graphics.ClearRegion.y0
+	MOV s $graphics.ClearRegion.x1
+	MOV s $graphics.ClearRegion.y1
+	MOV $graphics.ClearRegion.x0 $graphics.ClearRegion.x_pos
+	MOV $graphics.ClearRegion.y0 $graphics.ClearRegion.y_pos
+	#graphics.ClearRegion.outer
+		#graphics.ClearRegion.inner
+			MOV 0xBEEF y
+			MUL $graphics.ClearRegion.y_pos std.screen.width
+			ADD s $graphics.ClearRegion.x_pos
+			MOV 0 $s
+			INC $graphics.ClearRegion.x_pos
+			SEQ $graphics.ClearRegion.x_pos $graphics.ClearRegion.x1
+				JMP graphics.ClearRegion.inner
+		MOV 0xCAFE y
+		MOV $graphics.ClearRegion.x0 $graphics.ClearRegion.x_pos
+		INC $graphics.ClearRegion.y_pos
+		SEQ $graphics.ClearRegion.y_pos $graphics.ClearRegion.y1
+				JMP graphics.ClearRegion.outer
+	RET
+
+@graphics.FillRect.x0
+@graphics.FillRect.y0
+@graphics.FillRect.x1
+@graphics.FillRect.y1
+@graphics.FillRect.x_pos
+@graphics.FillRect.y_pos
+#graphics.FillRect
+	MOV s $graphics.FillRect.x0
+	MOV s $graphics.FillRect.y0
+	MOV s $graphics.FillRect.x1
+	MOV s $graphics.FillRect.y1
+	MOV $graphics.FillRect.x0 $graphics.FillRect.x_pos
+	MOV $graphics.FillRect.y0 $graphics.FillRect.y_pos
+	#graphics.FillRect.outer
+		#graphics.FillRect.inner
+			MOV 0xBEEF y
+
+			MOV $graphics.FillRect.y_pos s
+			MOV $graphics.FillRect.x_pos s
+			JSR graphics.QuickPutPixel
+
+			JSR graphics.Update
+
+			INC $graphics.FillRect.x_pos
+			SGR $graphics.FillRect.x_pos $graphics.FillRect.x1
+				JMP graphics.FillRect.inner
+
+
+		MOV 0xCAFE y
+		MOV $graphics.FillRect.x0 $graphics.FillRect.x_pos
+		INC $graphics.FillRect.y_pos
+		SGR $graphics.FillRect.y_pos $graphics.FillRect.y1
+				JMP graphics.FillRect.outer
+	RET
+
+
+
+
+
+
 
 
 #graphics.ESCAPE

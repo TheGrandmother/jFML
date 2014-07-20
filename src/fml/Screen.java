@@ -30,12 +30,12 @@ public class Screen extends Canvas {
 		WritableRaster raster = (WritableRaster) image.getRaster();
 		raster.setPixels(0, 0, width, height, pixels);
 		
-		BufferedImage rescaled = new BufferedImage(width * size, height
-				* size, BufferedImage.TYPE_INT_ARGB);
-		rescaled.getGraphics().drawImage(image, 0, 0, width * size,
-				height * size, null);
+		//BufferedImage rescaled = new BufferedImage(width * size, height
+		//		* size, BufferedImage.TYPE_INT_ARGB);
+		//rescaled.getGraphics().drawImage(image, 0, 0, width * size,
+		//		height * size, null);
 		
-		return rescaled;
+		return image;
 	}
 
 	public Screen(int width, int height, int size) {

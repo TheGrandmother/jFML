@@ -68,7 +68,7 @@ HLT
 HLT
 
 #std.math.sin_table
-< standard/sin.mem
+< sin.mem
 #std.math.sin_table_end
 NOP
 #std.math.ESCAPE

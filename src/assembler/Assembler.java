@@ -31,6 +31,7 @@ public class Assembler {
 	static int default_start_address = 0;
 	String in_name;
 	String out_name;
+	String working_directory;
 
 	HashMap<String, Pointer> pointer_map;
 	HashMap<String, Label> label_map;
@@ -95,15 +96,14 @@ public class Assembler {
 			break;
 		}
 
+		
+		a.working_directory = a.in_name.substring(0,a.in_name.lastIndexOf("/")+1);
 		try {
 			a.scanFile(a.in_name);
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
 
-	//	for (Token p : a.token_list) {
-	//		p.print();
-	//	}
 
 		a.resolvePointers();
 		a.resolveAllRefernces();
@@ -183,8 +183,8 @@ public class Assembler {
 		} else if (pretty_line.matches(instruction_regex)) {
 			parseInstruction(pretty_line);
 		} else {
-			throw new SyntaxError("Line does not match anny known pattern: "
-					+ line);
+			throw new SyntaxError("Line does not match any known pattern: "
+					+ pretty_line);
 		}
 	}
 
@@ -211,7 +211,7 @@ public class Assembler {
 			pointer_map.put(name, new Pointer(name, 0, line_number,
 					current_file));
 		} else {
-			pointer_map.put(name, new Pointer(name, getNumber(data),
+			pointer_map.put(name, new Pointer(name, getNumber(data)+1,
 					line_number, current_file));
 		}
 	}
@@ -244,6 +244,7 @@ public class Assembler {
 				file_name.length());
 //		System.out.println("Read another file namley: " + file_name);
 //		System.out.println("extension: " + extension);
+		if(file_name != in_name){file_name = working_directory+file_name;}
 		if (extension.matches("\\.asm")) {
 
 			temp_line_number = line_number;
@@ -694,7 +695,8 @@ public class Assembler {
 	void resolvePointers() {
 		current_address++;
 		for (Pointer p : pointer_map.values()) {
-			p.value = current_address + p.offset;
+			//p.value = current_address + p.offset;
+			p.value = current_address;
 			p.resolved = true;
 			current_address += 1 + p.offset;
 		}

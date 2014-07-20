@@ -7,6 +7,9 @@
 @noise_x_offs
 @factor_thing
 @another_thing
+@x_size
+@y_size
+
 JSR graphics.Clear
 MOV 0xFFF s
 DIV s 2
@@ -17,6 +20,8 @@ MOV 0 $x_pos
 MOV 0 $y_pos
 MOV 0 $noise_x_offs
 MOV 0 $another_thing
+MOV 10 $x_size
+MOV 10 $y_size
 #loop
 		MOV $y_pos s
 		MOV $x_pos s
@@ -26,12 +31,12 @@ MOV 0 $another_thing
 		MOV $x_pos s
 		JSR graphics.PutPixel
 		INC $x_pos
-		ADD $x_orig 50
+		ADD $x_orig $x_size
 		SEQ $x_pos s
 		JMP loop
 	MOV $x_orig $x_pos
 	INC $y_pos
-	ADD $y_orig 50
+	ADD $y_orig $y_size
 	SEQ $y_pos s
 	JMP loop
 DEC $y_orig
@@ -58,6 +63,8 @@ DIV s 80
 ADD s $x_orig
 MOV s $x_orig
 INC $another_thing
+INC $x_size
+INC $y_size
 JMP loop
 HLT
 	
