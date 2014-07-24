@@ -13,6 +13,7 @@ JMP std.math.ESCAPE
 #std.math.frac
 
 HLT
+!std.math.Sin.max_value = 255
 #std.math.Sin
 	@arg
 	MOV s $arg
@@ -66,6 +67,29 @@ HLT
 	//Lets
 	RET
 HLT
+
+//n mod m
+//n
+//m
+	#std.math.UnsignedMod
+	@std.math.UnsignedMod.n
+	@std.math.UnsignedMod.m
+	MOV s $std.math.UnsignedMod.n
+	MOV s $std.math.UnsignedMod.m
+	LES $std.math.UnsignedMod.n 0
+	JOO std.math.UnsignedMod.less
+		MOD $std.math.UnsignedMod.n $std.math.UnsignedMod.m
+		RET
+	#std.math.UnsignedMod.less
+		MOD $std.math.UnsignedMod.n $std.math.UnsignedMod.m
+		SUB $std.math.UnsignedMod.m s
+		RET
+
+
+
+
+
+
 
 #std.math.sin_table
 < sin.mem

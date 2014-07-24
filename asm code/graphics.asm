@@ -5,17 +5,6 @@
 MOV 0xBABE y
 JSR graphics.UpdateAndWait
 JMP graphics.ESCAPE
-//HLT
-
-#startpenis
-
-
-
-
-
-HLT
-
-
 
 //stack order is x0 y0 x1 y1
 #graphics.DrawLine

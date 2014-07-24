@@ -31,38 +31,17 @@ MOV 0 $std.io.y_pos
 JMP std.io.ESCAPE
 
 
-
-ADD std.irq_table_start 1
-MOV std.io.KeyHandler $s
-
+#std.io.SetupKeyHandler
+	ADD std.irq_table_start 1
+	MOV std.io.KeyHandler $s
+	RET
 MOV 0xAbed y
 JSR graphics.Clear
 JSR graphics.UpdateAndWait
-//
-MOV 0xB0B y
-#looop
-JMP looop
-MOV 0xADA y
 
 
-//
-HLT
-@temp_char
-MOV 33 $temp_char
-#loop
-MOV $temp_char s
-JSR std.io.PrintCharacter
 
-JSR std.io.Forward
-//MOV 1 s
-//JSR std.WaitMilli
-INC $temp_char
-SGR $temp_char 126
-JMP loop
-JSR graphics.UpdateAndWait
-MOV 33 $temp_char
-JMP loop
-HLT
+
 
 
 HLT
