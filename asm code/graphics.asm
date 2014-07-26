@@ -158,8 +158,8 @@ HLT
 	MOV s x
 	MOV s y
 
-	GRT x std.screen.width					//Check that x is in bounds
-	JOO graphics.PutPixel.x_out_of_bounds
+	LES x std.screen.width					//Check that x is in bounds
+	JOZ graphics.PutPixel.x_out_of_bounds
 
 	ADD x std.screen.start
 	MOV s x
@@ -238,6 +238,193 @@ HLT
 		SGR $graphics.FillRectangle.y_pos $graphics.FillRectangle.y1
 			JMP graphics.FillRectangle.outer
 	RET
+
+//sprite_address
+//x0
+//y0
+//width
+//height
+//Draws the desired image. Uses blitting. Black pixels are not drawn "transparent".
+//Does not draw if pixel if sprite is out of bounds
+#graphics.DrawSprite
+	@graphics.DrawSprite.sprite_address
+	@graphics.DrawSprite.x0
+	@graphics.DrawSprite.y0
+	@graphics.DrawSprite.x1
+	@graphics.DrawSprite.y1
+	@graphics.DrawSprite.width
+	@graphics.DrawSprite.height
+	@graphics.DrawSprite.x_pos
+	@graphics.DrawSprite.y_pos
+
+
+	MOV s $graphics.DrawSprite.sprite_address
+	MOV s $graphics.DrawSprite.x0
+	MOV s $graphics.DrawSprite.y0
+	MOV s $graphics.DrawSprite.width
+	MOV s $graphics.DrawSprite.height
+	MOV 0 $graphics.DrawSprite.x_pos
+	MOV 0 $graphics.DrawSprite.y_pos
+
+	ADD $graphics.DrawSprite.x0 $graphics.DrawSprite.width
+	MOV s $graphics.DrawSprite.x1
+
+	ADD $graphics.DrawSprite.y0 $graphics.DrawSprite.height
+	MOV s $graphics.DrawSprite.y1
+
+	SUB $graphics.DrawSprite.x0 1
+	SGR s 0												//We need to do it like this since SGR is not inclusive
+		RET
+
+	SUB $graphics.DrawSprite.y0 1
+	SGR s 0
+		RET
+
+	SLE $graphics.DrawSprite.x1 std.screen.width
+		RET
+
+	SLE $graphics.DrawSprite.y1 std.screen.height
+		RET												//Assert that sprite will not lie outside screen
+
+	#graphics.DrawSprite.outer_loop
+		SNE $graphics.DrawSprite.y_pos $graphics.DrawSprite.height
+			RET											//We put the break codition here instead.
+
+		#graphics.DrawSprite.inner_loop
+			MUL $graphics.DrawSprite.y_pos $graphics.DrawSprite.width
+			ADD s $graphics.DrawSprite.x_pos
+			ADD s $graphics.DrawSprite.sprite_address
+			MOV $s x									//Compute address
+
+			SNE x 0										//Dont draw if black
+				JMP graphics.DrawSprite.skip
+
+			MOV x $std.screen.color
+
+			ADD $graphics.DrawSprite.y_pos $graphics.DrawSprite.y0
+			ADD $graphics.DrawSprite.x_pos $graphics.DrawSprite.x0
+			JSR graphics.QuickPutPixel
+
+			#graphics.DrawSprite.skip
+
+			INC $graphics.DrawSprite.x_pos
+
+			SEQ $graphics.DrawSprite.x_pos $graphics.DrawSprite.width
+				JMP graphics.DrawSprite.inner_loop
+
+		MOV 0 $graphics.DrawSprite.x_pos
+
+		INC $graphics.DrawSprite.y_pos
+
+		JMP graphics.DrawSprite.outer_loop
+
+
+//sprite_address
+//x0
+//y0
+//width
+//height
+//new_width
+//new_height
+//Draws the desired image. Uses blitting. Black pixels are not drawn "transparent".
+//Does not draw if pixel if sprite is out of bounds
+#graphics.DrawScaledSprite
+	@graphics.DrawScaledSprite.sprite_address
+	@graphics.DrawScaledSprite.x0
+	@graphics.DrawScaledSprite.y0
+	@graphics.DrawScaledSprite.x1
+	@graphics.DrawScaledSprite.y1
+	@graphics.DrawScaledSprite.w0
+	@graphics.DrawScaledSprite.h0
+	@graphics.DrawScaledSprite.w1
+	@graphics.DrawScaledSprite.h1
+	@graphics.DrawScaledSprite.x_pos
+	@graphics.DrawScaledSprite.y_pos
+
+
+	MOV s $graphics.DrawScaledSprite.sprite_address
+	MOV s $graphics.DrawScaledSprite.x0
+	MOV s $graphics.DrawScaledSprite.y0
+	MOV s $graphics.DrawScaledSprite.w0
+	MOV s $graphics.DrawScaledSprite.h0
+	MOV s $graphics.DrawScaledSprite.w1
+	MOV s $graphics.DrawScaledSprite.h1
+
+	MOV 0 $graphics.DrawScaledSprite.x_pos
+	MOV 0 $graphics.DrawScaledSprite.y_pos
+
+	ADD $graphics.DrawScaledSprite.x0 $graphics.DrawScaledSprite.w1
+	MOV s $graphics.DrawScaledSprite.x1
+
+	ADD $graphics.DrawScaledSprite.y0 $graphics.DrawScaledSprite.h1
+	MOV s $graphics.DrawScaledSprite.y1
+
+	SUB $graphics.DrawScaledSprite.x0 1
+	SGR s 0												//We need to do it like this since SGR is not inclusive
+		RET
+
+	SUB $graphics.DrawScaledSprite.y0 1
+	SGR s 0
+		RET
+
+	SLE $graphics.DrawScaledSprite.x1 std.screen.width
+		RET
+
+	SLE $graphics.DrawScaledSprite.y1 std.screen.height
+		RET												//Assert that sprite will not lie outside screen
+
+	#graphics.DrawScaledSprite.outer_loop
+		SNE $graphics.DrawScaledSprite.y_pos $graphics.DrawScaledSprite.h1
+			RET											//We put the break codition here instead.
+
+		#graphics.DrawScaledSprite.inner_loop
+
+			//First we must compute the corresponding pixel in the sprites bitmap
+			SUB $graphics.DrawScaledSprite.w0 1
+			MUL $graphics.DrawScaledSprite.x_pos s
+			DIV s $graphics.DrawScaledSprite.w1
+			MOV s x									// (x*(w0-1))/w1
+
+			SUB $graphics.DrawScaledSprite.h0 1
+			MUL $graphics.DrawScaledSprite.y_pos s
+			DIV s $graphics.DrawScaledSprite.h1
+			MOV s y									// (y*(h0-1))/h1
+
+
+			MUL y $graphics.DrawScaledSprite.w0
+			ADD x s
+			ADD s $graphics.DrawScaledSprite.sprite_address
+			MOV $s x
+
+			SNE x 0										//Dont draw if black
+				JMP graphics.DrawScaledSprite.skip
+
+			MOV x $std.screen.color
+
+			ADD $graphics.DrawScaledSprite.y_pos $graphics.DrawScaledSprite.y0
+			ADD $graphics.DrawScaledSprite.x_pos $graphics.DrawScaledSprite.x0
+			JSR graphics.QuickPutPixel
+			//JSR graphics.UpdateAndWait
+
+			#graphics.DrawScaledSprite.skip
+
+			INC $graphics.DrawScaledSprite.x_pos
+
+			SEQ $graphics.DrawScaledSprite.x_pos $graphics.DrawScaledSprite.w1
+				JMP graphics.DrawScaledSprite.inner_loop
+
+		MOV 0 $graphics.DrawScaledSprite.x_pos
+
+		INC $graphics.DrawScaledSprite.y_pos
+
+		JMP graphics.DrawScaledSprite.outer_loop
+
+
+
+
+
+
+
 
 
 

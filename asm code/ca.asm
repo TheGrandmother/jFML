@@ -2,12 +2,16 @@
 < graphics.asm
 < std.math.asm
 ! width = 100
-! height = 100
+! height = 80
 ! size = 2
 @ map+10000
 @ display+10000
 @ step
 @ index
+
+! ca.x_start = 540
+! ca.y_start = 400
+
 #START
 JSR graphics.Clear
 JSR ca.InitMap
@@ -23,11 +27,6 @@ MOV 0 $index
 	MOV s $index
 	JMP loop
 HLT
-
-
-
-
-
 
 #ca.DrawAll
 	@ca.DrawAll.x_pos	//These Are display positions
@@ -186,7 +185,6 @@ HLT
 	MOV s $ca.Rule30.x
 	MOV s $ca.Rule30.y
 
-
 	MUL $ca.Rule30.y width
 	ADD s $ca.Rule30.x
 	ADD s map
@@ -242,8 +240,3 @@ HLT
 		SEQ $ca.SwapLine.x width
 			JMP ca.SwapLine.loop
 		RET
-
-
-
-
-

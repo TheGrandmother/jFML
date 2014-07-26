@@ -71,7 +71,8 @@ HLT
 		MOV $s $std.screen.color
 		MOV $std.io.PrintCharacter.y s
 		MOV $std.io.PrintCharacter.x s
-		JSR graphics.PutPixel
+		//JSR graphics.PutPixel
+		JSR graphics.QuickPutPixel
 		INC $std.io.PrintCharacter.x
 		SUB $std.io.PrintCharacter.x $std.io.x_pos
 		EQL s std.io.char_width

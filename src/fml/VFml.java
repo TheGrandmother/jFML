@@ -26,7 +26,7 @@ public class VFml extends JFrame implements KeyListener{
 	int scaling_factor = 1;
 	int memory_size = 0xFFF_FFF;
 	
-	int refresh_rate = 40;
+	int refresh_rate = 0;
 	
 	long time;
 	long repeating_key_timer = 0;
@@ -214,8 +214,6 @@ public class VFml extends JFrame implements KeyListener{
 		}
 		loadFile("tmp.fml", 0);
 		
-		
-		
 	}
 	
 
@@ -228,7 +226,7 @@ public class VFml extends JFrame implements KeyListener{
 			
 			assembleAndLoad();
 			return;
-		}else if(e.getModifiersEx() == (InputEvent.CTRL_DOWN_MASK| InputEvent.ALT_DOWN_MASK) && (int)e.getKeyChar() == 19){
+		}else if(e.getModifiersEx() == (InputEvent.CTRL_DOWN_MASK| InputEvent.ALT_DOWN_MASK) && ((int)e.getKeyChar() == 19  || (int)e.getKeyChar() == 26 )){
 			
 			running = true;
 			return;
@@ -243,7 +241,7 @@ public class VFml extends JFrame implements KeyListener{
 	
 	@Override
 	public synchronized void  keyPressed(KeyEvent e) {
-	
+		//System.out.println((int)e.getKeyChar());
 		//We need to have this shit here in order to fix the horrible bug of repeating key presses in linux.
 		if(repeating_key_block){
 			if(System.currentTimeMillis() - repeating_key_timer > repeating_key_timeout){
@@ -260,7 +258,7 @@ public class VFml extends JFrame implements KeyListener{
 			debug = true;
 			return;
 			
-		}else if(e.getModifiersEx() == (InputEvent.CTRL_DOWN_MASK| InputEvent.ALT_DOWN_MASK) && (int)e.getKeyChar() == 17){
+		}else if(e.getModifiersEx() == (InputEvent.CTRL_DOWN_MASK| InputEvent.ALT_DOWN_MASK) && ((int)e.getKeyChar() == 17  )  ){
 			//System.out.println("paused");
 			running = false;
 			return;

@@ -9,260 +9,240 @@
 !c2 = 0x008
 !c3 = 0x0F0
 !c4 = 0x080
-!max_step = 20
-!min_step = -20
-!angle_factor = 10
-@x1
-@x2
-@x3
-@x4
-@y_pos
-@angle
-@step
-@toggle
-@factor
-@offs
-@color_map+300
+!twister.max_step = 20
+!twister.min_step = -20
+!twister.angle_factor = 10
+@twister.x1
+@twister.x2
+@twister.x3
+@twister.x4
+@twister.y_pos
+@twister.angle
+@twister.step
+@twister.toggle
+@twister.factor
+@twister.offs
+@twister.color_map+300
 
-JSR twister.ComputeColorMap
-MOV 1 $toggle
-MOV 0 $x1
-MOV 0 $x2
-MOV 0 $x3
-MOV 0 $x4
-MOV 0 $y_pos
-MOV 0 $angle
-MOV 0 $step
-MOV 4 $factor
-MOV 320 $offs
+JMP twister.ESCAPE
+
+#twister.INIT
+	JSR twister.ComputeColorMap
+	MOV 1 $twister.toggle
+	MOV 0 $twister.x1
+	MOV 0 $twister.x2
+	MOV 0 $twister.x3
+	MOV 0 $twister.x4
+	MOV 0 $twister.y_pos
+	MOV 0 $twister.angle
+	MOV 0 $twister.step
+	MOV 5 $twister.factor
+	MOV 80 $twister.offs
+	RET
 JSR graphics.Clear
 
 
-#start
-		JSR twister.AngleShift
-		JSR twister.PlotPoints
+#twister.step_once
+	#twister.start
+	JSR twister.AngleShift
+	JSR twister.PlotPoints
 
-		INC $y_pos
+	INC $twister.y_pos
 
-		#twister.skip
-		SEQ $y_pos std.screen.height
-			JMP start
+	#twister.skip
+	SEQ $twister.y_pos std.screen.height
+		JMP twister.start
 
-
-
-
-
-	MOV 0 $y_pos
-
-
-
-	JSR graphics.UpdateAndWait
-	MOV 0x000 $std.screen.color
-	MOV std.screen.height s
-	MOV 385 s
-	MOV 0 s
-	MOV 250 s
-
-	JSR graphics.FillRectangle
-	JMP start
+	MOV 0 $twister.y_pos
+	//JSR graphics.UpdateAndWait
+	RET
 	HLT
 
+#twister.Clear
+	MOV 0x0F0 $std.screen.color
+	MOV std.screen.height s
+	MOV 140 s
+	MOV 0 s
+	MOV 0 s
 
-
-
-
-#twister.PlotPoints
-	MOV $angle s
-	JSR std.math.Sin
-	DIV s $factor
-	ADD s $offs
-	MOV s $x1
-
-	ADD $angle 90
-	JSR std.math.Sin
-	DIV s $factor
-	ADD s $offs
-	MOV s $x2
-
-	ADD $angle 180
-	JSR std.math.Sin
-	DIV s $factor
-	ADD s $offs
-	MOV s $x3
-
-	ADD $angle 270
-	JSR std.math.Sin
-	DIV s $factor
-	ADD s $offs
-	MOV s $x4
-
-	MOV $x2 s
-	MOV $x1 s
-	JSR twister.Line
-
-	MOV $x3 s
-	MOV $x2 s
-	JSR twister.Line
-
-
-	MOV $x4 s
-	MOV $x3 s
-	JSR twister.Line
-
-
-	MOV $x1 s
-	MOV $x4 s
-	JSR twister.Line
-
-
+	JSR graphics.FillRectangle
 	RET
 
+#twister.PlotPoints
+	MOV $twister.angle s
+	JSR std.math.Sin
+	DIV s $twister.factor
+	ADD s $twister.offs
+	MOV s $twister.x1
+
+	ADD $twister.angle 90
+	JSR std.math.Sin
+	DIV s $twister.factor
+	ADD s $twister.offs
+	MOV s $twister.x2
+
+	ADD $twister.angle 180
+	JSR std.math.Sin
+	DIV s $twister.factor
+	ADD s $twister.offs
+	MOV s $twister.x3
+
+	ADD $twister.angle 270
+	JSR std.math.Sin
+	DIV s $twister.factor
+	ADD s $twister.offs
+	MOV s $twister.x4
+
+	MOV $twister.x2 s
+	MOV $twister.x1 s
+	JSR twister.Line
+
+	MOV $twister.x3 s
+	MOV $twister.x2 s
+	JSR twister.Line
+
+	MOV $twister.x4 s
+	MOV $twister.x3 s
+	JSR twister.Line
+
+	MOV $twister.x1 s
+	MOV $twister.x4 s
+	JSR twister.Line
+
+	RET
 
 //p1
 //p2
-@temp_x
-@x_end
-@x_start
-@line_length
+@twister.temp_x
+@twister.x_end
+@twister.x_start
+@twister.line_length
 #twister.Line
 
-	MOV s $x_start
-	MOV s $x_end
+	MOV s $twister.x_start
+	MOV s $twister.x_end
 
-	SGR $x_end $x_start			//Skip if p2 < p1
+	SGR $twister.x_end $twister.x_start			//Skip if p2 < p1
 		RET
 
-	SUB $x_end $x_start
-	MOV s $line_length			//Get length
+	SUB $twister.x_end $twister.x_start
+	MOV s $twister.line_length			//Get length
 
-
-
-	MOV 0 $temp_x
+	MOV 0 $twister.temp_x
 	#twister.Line.loop
 		//MOV 0xBA116 y
 
-		MUL $temp_x map_length
-		DIV s $line_length
-		ADD s $map_start
+		MUL $twister.temp_x twister.map_length
+		DIV s $twister.line_length
+		ADD s $twister.map_start
 		MOV $s $std.screen.color	//Color = ((x * map_length) / line_length) + map_start
 
-		MOV $y_pos s
-		ADD $x_start $temp_x
+		MOV $twister.y_pos s
+		ADD $twister.x_start $twister.temp_x
 		JSR graphics.QuickPutPixel
 
-		INC $temp_x
-		SEQ $temp_x $line_length
+		INC $twister.temp_x
+		SEQ $twister.temp_x $twister.line_length
 			JMP twister.Line.loop
 		RET
 
-
 #twister.AngleShift
 
-	EQL $step max_step
-	EQL $step min_step
+	EQL $twister.step twister.max_step
+	EQL $twister.step twister.min_step
 	ADD s s
 	EQL s 1
 	JOZ twister.AngleShift.skip
-		MUL $toggle -1
-		MOV s $toggle
-		SNE $step max_step
-			SUB $step 2
-		SNE $step min_step
-			ADD $step 2
+		MUL $twister.toggle -1
+		MOV s $twister.toggle
+		SNE $twister.step twister.max_step
+			SUB $twister.step 2
+		SNE $twister.step twister.min_step
+			ADD $twister.step 2
 		//MOV 0 $step
-		MOV s $step
+		MOV s $twister.step
 
 	#twister.AngleShift.skip
-	SNE $toggle -1
+	SNE $twister.toggle -1
 		JMP twister.AngleShift.decrease
 
 	#twister.AngleShift.increase
-	DIV $y_pos 2
-	MUL s $step
-	DIV s angle_factor
-	MOV s $angle
-	MOD $y_pos std.screen.height
+	DIV $twister.y_pos 2
+	MUL s $twister.step
+	DIV s twister.angle_factor
+	MOV s $twister.angle
+	MOD $twister.y_pos std.screen.height
 	SNE s 0
-		INC $step
+		INC $twister.step
 	RET
 
 	#twister.AngleShift.decrease
-	DIV $y_pos 2
-	MUL s $step
-	DIV s angle_factor
-	MOV s $angle
-	MOD $y_pos std.screen.height
+	DIV $twister.y_pos 2
+	MUL s $twister.step
+	DIV s twister.angle_factor
+	MOV s $twister.angle
+	MOD $twister.y_pos std.screen.height
 	SNE s 0
-		DEC $step
+		DEC $twister.step
 	RET
 
-
-! min_r = 0x8
-! min_g = 0x2
-! min_b = 0x0
-! max_r = 0xF
-! max_g = 0xF
-! max_b = 0x2
-! map_length = 300
-@map_start
-@map_end
-@current_address
-@offs1
-@co
-@x_val
+! twister.min_r = 0x8
+! twister.min_g = 0x2
+! twister.min_b = 0x0
+! twister.max_r = 0xF
+! twister.max_g = 0xF
+! twister.max_b = 0x2
+! twister.map_length = 300
+@twister.map_start
+@twister.map_end
+@twister.current_address
+@twister.offs1
+@twister.co
+@twister.x_val
 #twister.ComputeColorMap
-	MOV color_map $map_start	//Compute addresses
-	ADD map_length $map_start
-	MOV s $map_end
+	MOV twister.color_map $twister.map_start	//Compute addresses
+	ADD twister.map_length $twister.map_start
+	MOV s $twister.map_end
 
-	MOV 0 $x_val				// Init x
+	MOV 0 $twister.x_val				// Init x
 
 	#twister.ComputeColorMap.loop
-		ADD $x_val $map_start
-		MOV s $current_address	// Get address
+		ADD $twister.x_val $twister.map_start
+		MOV s $twister.current_address	// Get address
 
 		//Compute red channel
-		SUB max_b min_b		//Compute offset
-		MUL $x_val s
-		DIV s map_length
-		ADD s min_b 		//(offs*x)/length + min_color
+		SUB twister.max_b twister.min_b		//Compute offset
+		MUL $twister.x_val s
+		DIV s twister.map_length
+		ADD s twister.min_b 		//(offs*x)/length + min_color
 		MOV s x
 
 		//Compute green chanel
-		SUB max_g min_g		//Compute offset
-		MUL $x_val s
-		DIV s map_length
-		ADD s min_g 		//(offs*x)/length + min_color
+		SUB twister.max_g twister.min_g		//Compute offset
+		MUL $twister.x_val s
+		DIV s twister.map_length
+		ADD s twister.min_g 		//(offs*x)/length + min_color
 		SFT s 4
 		OOR s x
 		MOV s x
 
 		//Compute green chanel
-		SUB max_r min_r		//Compute offset
-		MUL $x_val s
-		DIV s map_length
-		ADD s min_r 		//(offs*x)/length + min_color
+		SUB twister.max_r twister.min_r		//Compute offset
+		MUL $twister.x_val s
+		DIV s twister.map_length
+		ADD s twister.min_r 		//(offs*x)/length + min_color
 		SFT s 8
 		OOR s x
 
-		MOV $current_address y
+		MOV $twister.current_address y
 		MOV s $y				//Move to map
 
-		INC $x_val
+		INC $twister.x_val
 
-		//RET // FIIIIIIIIIIIIIIIIIIIIIIIIIIIX
-		ADD $x_val $map_start
-		SEQ s $map_end
+		ADD $twister.x_val $twister.map_start
+		SEQ s $twister.map_end
 			JMP twister.ComputeColorMap.loop
 
 
 		RET
-
-
-
-
-
-
-
-
-
+#twister.ESCAPE
