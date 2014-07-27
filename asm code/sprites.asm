@@ -5,43 +5,46 @@
 @sprites.angle
 @sprites.x0
 @sprites.y0
+JMP sprites.ESCAPE
+#sprites.INIT
+	//JSR graphics.Clear
+	MOV 0xFFF $std.screen.color
+	MOV std.screen.height s
+	MOV std.screen.width s
+	MOV 0 s
+	MOV 0 s
+	JSR graphics.FillRectangle
+	JSR graphics.UpdateAndWait
 
-JSR graphics.Clear
-MOV 0xFFF $std.screen.color
-MOV std.screen.height s
-MOV std.screen.width s
-MOV 0 s
-MOV 0 s
-JSR graphics.FillRectangle
-JSR graphics.UpdateAndWait
+	MOV 0 $sprites.angle
+	MOV 0 $sprites.UpdateCordinates.z_freq
 
-MOV 0 $sprites.angle
+	DIV std.screen.width 2
+	SUB s 20
+	MOV s $sprites.x0
 
-DIV std.screen.width 2
-SUB s 20
-MOV s $sprites.x0
+	DIV std.screen.height 2
+	SUB s 20
+	MOV s $sprites.y0
 
-DIV std.screen.height 2
-SUB s 20
-MOV s $sprites.y0
+	MOV sprites.width_table x
+	MOV sprites.width $x
+	INC x
+	MOV sprites.width $x
+	INC x
+	MOV sprites.width $x
+	INC x
+	MOV sprites.width $x
 
-MOV sprites.width_table x
-MOV sprites.width $x
-INC x
-MOV sprites.width $x
-INC x
-MOV sprites.width $x
-INC x
-MOV sprites.width $x
-
-MOV sprites.height_table x
-MOV sprites.height $x
-INC x
-MOV sprites.height $x
-INC x
-MOV sprites.height $x
-INC x
-MOV sprites.height $x
+	MOV sprites.height_table x
+	MOV sprites.height $x
+	INC x
+	MOV sprites.height $x
+	INC x
+	MOV sprites.height $x
+	INC x
+	MOV sprites.height $x
+	RET
 
 #sprites.step_once
 
@@ -49,12 +52,16 @@ MOV sprites.height $x
 	JSR sprites.DrawBalls
 	JSR graphics.UpdateAndWait
 	INC $sprites.angle
-	JSR sprites.ClearBalls
-	JMP sprites.step_once
+	//JSR sprites.ClearBalls
+	RET
+	//JMP sprites.step_once
 
 
 
 
+#sprites.IncFreq
+	INC $sprites.UpdateCordinates.z_freq
+	RET
 
 #sprites.ClearBalls				//heheheh
 	@sprites.ClearBalls.x0
@@ -217,7 +224,7 @@ MOV sprites.height $x
 	@sprites.UpdateCordinates.temp_z
 	MOV 2 $sprites.UpdateCordinates.factor
 	MOV 5 $sprites.UpdateCordinates.sclaing_factor
-	MOV 91 $sprites.UpdateCordinates.z_freq
+
 
 	//Ball1
 
@@ -423,3 +430,8 @@ MOV sprites.height $x
 ! sprites.height = 18
 #sprites.sprite_start
 < orb.mem
+NOP
+NOP
+#sprites.ESCAPE
+NOP
+

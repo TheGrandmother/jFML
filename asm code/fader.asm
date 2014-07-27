@@ -3,33 +3,58 @@
 < graphics.asm
 
 @fader.address
-@fader.index
+
 @fader.step
 @fader.steps
+@fader.toggle
 
-MOV 0 $fader.step
-MOV 10 $fader.steps
-#lewp
+JMP fader.ESCAPE
 
+#fader.INIT
+	JSR graphics.Clear
+	MOV 1 $fader.toggle
+	MOV 0 $fader.step
+	MOV 25 $fader.steps
+	RET
+
+
+#fader.step_once
 	JSR fader.DrawImage
 	JSR graphics.UpdateAndWait
-	INC $fader.step
-	SLE $fader.step $fader.steps
-		HLT
 
-JMP lewp
+	ADD $fader.steps -1
+	SNE	$fader.step s
+		MOV -1 $fader.toggle
+	SNE	$fader.step 1
+		MOV 1 $fader.toggle
 
+	ADD $fader.step $fader.toggle
+	MOV s $fader.step
+
+	RET
 
 #fader.DrawImage
 @fader.DrawImage.r
 @fader.DrawImage.b
 @fader.DrawImage.g
-MOV 0 $fader.index
+@fader.DrawImage.x0
+@fader.DrawImage.y0
+@fader.DrawImage.x_pos
+@fader.DrawImage.y_pos
 
-	#fader.DrawImage.loop
 
-		ADD $fader.index fader.image_start
+MOV 220 $fader.DrawImage.x0
+MOV 25 $fader.DrawImage.y0
+MOV 0 $fader.DrawImage.x_pos
+MOV 0 $fader.DrawImage.y_pos
+#fader.DrawImage.outer_loop
+	#fader.DrawImage.inner_loop
+
+		MUL $fader.DrawImage.y_pos fader.image_width
+		ADD s $fader.DrawImage.x_pos
+		ADD s fader.image_start
 		MOV $s x
+
 
 		SNE x 0
 			JMP fader.DrawImage.skip
@@ -61,20 +86,32 @@ MOV 0 $fader.index
 		OOR s $fader.DrawImage.b
 		SFT  $fader.DrawImage.r 8
 		OOR s s
-		MOV s x
+		MOV s $std.screen.color
+
+		ADD $fader.DrawImage.y_pos $fader.DrawImage.y0
+		ADD $fader.DrawImage.x_pos $fader.DrawImage.x0
+		JSR graphics.QuickPutPixel
 
 		#fader.DrawImage.skip
-		ADD $fader.index std.screen.start
-		MOV x $s
 
-		INC $fader.index
+		INC $fader.DrawImage.x_pos
 
-		SLE $fader.index std.screen.size
-			RET
-		JMP fader.DrawImage.loop
+		SEQ $fader.DrawImage.x_pos fader.image_width
+			JMP fader.DrawImage.inner_loop
+
+	MOV 0 $fader.DrawImage.x_pos
+	INC $fader.DrawImage.y_pos
+	SEQ  $fader.DrawImage.y_pos fader.image_height
+		JMP fader.DrawImage.outer_loop
+	RET
 
 
 
 
 #fader.image_start
-<hacked.mem
+! fader.image_width = 173
+! fader.image_height = 426
+<neubauten.mem
+NOP
+#fader.ESCAPE
+NOP

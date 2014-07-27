@@ -23,12 +23,19 @@
 @std.io.char_pointer
 @std.io.x_pos
 @std.io.y_pos
-#std.io.INIT
-MOV 0xFEA1 y
-MOV std.io.charset_start $std.io.char_pointer
-MOV std.io.line_margin $std.io.x_pos
-MOV 0 $std.io.y_pos
+//#std.io.INIT
+	MOV 0xFEA1 y
+	MOV std.io.charset_start $std.io.char_pointer
+	MOV std.io.line_margin $std.io.x_pos
+	MOV 0 $std.io.y_pos
 JMP std.io.ESCAPE
+
+#std.io.INIT
+	MOV std.io.charset_start $std.io.char_pointer
+	MOV std.io.line_margin $std.io.x_pos
+	MOV 0 $std.io.y_pos
+	RET
+
 
 
 #std.io.SetupKeyHandler
@@ -54,7 +61,9 @@ HLT
 @std.io.PrintCharacter.y
 	MOV s x
 	SGR x 32
-	RET //Skip if space
+		RET //Skip if space
+	SNE x 10 //new_line
+		JMP std.io.PrintCharacter.line_feed
 	MOV x s
 	SUB s 33
 	MUL s std.io.char_length
@@ -85,6 +94,10 @@ HLT
 		JMP std.io.PrintCharacter.loop
 		RET
 	RET
+
+	#std.io.PrintCharacter.line_feed
+		JSR std.io.NewLine
+		RET
 HLT
 
 #std.io.NewLine

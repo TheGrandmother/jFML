@@ -73,7 +73,7 @@ RET
 		MOD $scroller.index $scroller.text_length
 		MOV s $scroller.index			//Have text loop
 
-		SUB $std.screen.width 35
+		SUB std.screen.width 20
 		SGR $scroller.x_pos s
 			JMP scroller.loop			//Lopp while x_pos < width - 10
 
