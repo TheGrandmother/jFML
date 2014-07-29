@@ -1,0 +1,23 @@
+:::::::MEMORY MAP:::::::::
+000_000 - EFF_FFF 	: general
+
+F00_000 - FFF_FFF 	: Shared
+
+	F00_000-F4B_000 : 	Screen map
+	F4B_001			: 	Screen update
+	F4B_002			:	Screen color
+	F4B_003			: 	Timer_address
+	
+	F4B_004-F4B_F70	: 	Charset
+	F4B_F71			:	Key Value
+	F4B_F72			: 	Key Down
+	
+	F4C_000-F4C_00F	:	IRQ
+	F4C_010 		:	IRQ 0 interval
+	F4C_011			:	IRQ 0 enable
+
+::::::IRQ list::::::
+IRQ table entries mapped to zero will be ignored.
+
+IRQ 0	:	Timed Interrupt
+IRQ 1	:	Key Pressed	

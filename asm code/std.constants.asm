@@ -1,4 +1,4 @@
-//In this file some universal constants are defined.
+	//In this file some universal constants are defined.
 !std.shared.start = 0xF00_000
 
 !std.screen.start = 0xF00_000

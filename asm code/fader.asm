@@ -43,8 +43,8 @@ JMP fader.ESCAPE
 @fader.DrawImage.y_pos
 
 
-MOV 220 $fader.DrawImage.x0
-MOV 25 $fader.DrawImage.y0
+MOV 230 $fader.DrawImage.x0
+MOV 180 $fader.DrawImage.y0
 MOV 0 $fader.DrawImage.x_pos
 MOV 0 $fader.DrawImage.y_pos
 #fader.DrawImage.outer_loop
@@ -109,9 +109,9 @@ MOV 0 $fader.DrawImage.y_pos
 
 
 #fader.image_start
-! fader.image_width = 173
-! fader.image_height = 426
-<neubauten.mem
+! fader.image_width = 147
+! fader.image_height = 148
+< bulb.mem
 NOP
 #fader.ESCAPE
 NOP

@@ -26,7 +26,7 @@ MOV s x
 
 
 #std.Random
-	//ADD $std.timer_address $std.Random.current
+	ADD $std.timer_address $std.Random.current
 
 	MUL $std.Random.current std.Random.multiplier
 	ADD s std.Random.increment
@@ -35,6 +35,18 @@ MOV s x
 	MOV $std.Random.current s
 	RET
 HLT
+
+//This random function generates random numbers which are
+//equally distributed in a 2D space... and maybe higher dimension
+#std.SafeRandom
+	JSR std.Random
+	DIV s 2
+	JSR std.Random
+	DIV s 2
+	ADD s s
+	MOD s std.Random.modulo
+
+	RET
 
 #std.random.SetSeed
 MOV s $std.Random.current

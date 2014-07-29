@@ -101,7 +101,7 @@ RET
 		RET
 RET
 #scroller.Clear
-	MOV 0x00F $std.screen.color
+	MOV 0x000 $std.screen.color
 	MOV	360 s	//y1
 	MOV 639 s	//x1
 	MOV 120 s	//y0

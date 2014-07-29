@@ -59,12 +59,11 @@ JSR graphics.Clear
 	HLT
 
 #twister.Clear
-	MOV 0x0F0 $std.screen.color
+	MOV 0x000 $std.screen.color
 	MOV std.screen.height s
 	MOV 140 s
 	MOV 0 s
 	MOV 0 s
-
 	JSR graphics.FillRectangle
 	RET
 

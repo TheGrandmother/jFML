@@ -219,10 +219,30 @@ HLT
 	MOV s $graphics.FillRectangle.y0
 	MOV s $graphics.FillRectangle.x1
 	MOV s $graphics.FillRectangle.y1
+
+
+	//Need to do some bounds checking
+	SLE $graphics.FillRectangle.y1 std.screen.height
+		MOV std.screen.height $graphics.FillRectangle.y1
+
+	SLE $graphics.FillRectangle.x1 std.screen.width
+		MOV std.screen.width $graphics.FillRectangle.x1
+
+	SGR $graphics.FillRectangle.y0 0
+		MOV 0 $graphics.FillRectangle.y0
+
+	SGR $graphics.FillRectangle.x0 0
+		MOV 0 $graphics.FillRectangle.x0
+
+
+
 	MOV $graphics.FillRectangle.x0 $graphics.FillRectangle.x_pos
 	MOV $graphics.FillRectangle.y0 $graphics.FillRectangle.y_pos
 
+
 	#graphics.FillRectangle.outer
+		SLE $graphics.FillRectangle.y_pos $graphics.FillRectangle.y1
+			RET
 		#graphics.FillRectangle.inner
 
 			ADD $graphics.FillRectangle.x_pos std.screen.start
@@ -233,9 +253,10 @@ HLT
 			INC $graphics.FillRectangle.x_pos
 			SGR $graphics.FillRectangle.x_pos $graphics.FillRectangle.x1
 				JMP graphics.FillRectangle.inner
+
 		MOV $graphics.FillRectangle.x0 $graphics.FillRectangle.x_pos
 		INC $graphics.FillRectangle.y_pos
-		SGR $graphics.FillRectangle.y_pos $graphics.FillRectangle.y1
+		//SGR $graphics.FillRectangle.y_pos $graphics.FillRectangle.y1
 			JMP graphics.FillRectangle.outer
 	RET
 

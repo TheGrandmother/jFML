@@ -23,8 +23,10 @@
 @std.io.char_pointer
 @std.io.x_pos
 @std.io.y_pos
+@std.io.text_color
 //#std.io.INIT
 	MOV 0xFEA1 y
+	MOV 0xFFF $std.io.text_color
 	MOV std.io.charset_start $std.io.char_pointer
 	MOV std.io.line_margin $std.io.x_pos
 	MOV 0 $std.io.y_pos
@@ -77,11 +79,17 @@ HLT
 		#std.io.PrintCharacter.loop
 		//set color and plot
 		MOV $std.io.PrintCharacter.char_pointer s
-		MOV $s $std.screen.color
+		MOV $s x
+		SNE x 0
+			JMP std.io.PrintCharacter.skip
+
+		MOV $std.io.text_color $std.screen.color
 		MOV $std.io.PrintCharacter.y s
 		MOV $std.io.PrintCharacter.x s
 		//JSR graphics.PutPixel
 		JSR graphics.QuickPutPixel
+
+		#std.io.PrintCharacter.skip
 		INC $std.io.PrintCharacter.x
 		SUB $std.io.PrintCharacter.x $std.io.x_pos
 		EQL s std.io.char_width
@@ -167,3 +175,5 @@ HLT
 
 
 #std.io.ESCAPE
+
+
