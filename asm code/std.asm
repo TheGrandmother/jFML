@@ -26,7 +26,7 @@ MOV s x
 
 
 #std.Random
-	ADD $std.timer_address $std.Random.current
+	//ADD $std.timer_address $std.Random.current
 
 	MUL $std.Random.current std.Random.multiplier
 	ADD s std.Random.increment

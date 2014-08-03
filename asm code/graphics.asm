@@ -6,59 +6,6 @@ MOV 0xBABE y
 JSR graphics.UpdateAndWait
 JMP graphics.ESCAPE
 
-//stack order is x0 y0 x1 y1
-#graphics.DrawLine
-	@graphics.DrawLine.x0
-	@graphics.DrawLine.y0
-	@graphics.DrawLine.x1
-	@graphics.DrawLine.y1
-	MOV s $graphics.DrawLine.x0
-	MOV s $graphics.DrawLine.y0
-	MOV s $graphics.DrawLine.x1
-	MOV s $graphics.DrawLine.y1
-
-	@graphics.DrawLine.dx
-	@graphics.DrawLine.dy
-	SUB $graphics.DrawLine.x1 $graphics.DrawLine.x0
-	JSR std.Abs
-	MOV s $graphics.DrawLine.dx
-
-	SUB $graphics.DrawLine.y1 $graphics.DrawLine.y0
-	JSR std.Abs
-	MOV s $graphics.DrawLine.dy
-
-	@graphics.DrawLine.sx
-	LES $graphics.DrawLine.x0 $graphics.DrawLine.x1
-	JOZ graphics.DrawLine.skip1
-		MOV 1 $graphics.DrawLine.sx
-		JMP graphics.DrawLine.skip2
-		#graphics.DrawLine.skip1
-		MOV -1 $graphics.DrawLine.sx
-		#graphics.DrawLine.skip2
-
-	@graphics.DrawLine.sy
-	LES $graphics.DrawLine.y0 $graphics.DrawLine.y1
-	JOZ graphics.DrawLine.skip3
-		MOV 1 $graphics.DrawLine.sy
-		JMP graphics.DrawLine.skip4
-		#graphics.DrawLine.skip3
-		MOV -1 $graphics.DrawLine.sy
-		#graphics.DrawLine.skip4
-
-	@graphics.DrawLine.err
-	SUB $graphics.DrawLine.dx  $graphics.DrawLine.dy
-	MOV s $graphics.DrawLine.err
-
-	#graphics.DrawLine.loop
-		MOV $graphics.DrawLine.y0 s
-		MOV $graphics.DrawLine.x0 s
-		JSR graphics.PutPixel
-
-
-RET
-HLT
-
-
 #graphics.Update
 	MOV 1 $std.screen.update_bit
 	RET
@@ -153,22 +100,30 @@ HLT
 	RET
 
 HLT
-//X is on top. Y is on bottom
+
+// x <- Top
+// y
 #graphics.PutPixel
-	MOV s x
-	MOV s y
+	@graphics.PutPixel.x_pos
+	@graphics.PutPixel.y_pos
+	MOV s $graphics.PutPixel.x_pos
+	MOV s $graphics.PutPixel.y_pos
 
-	LES x std.screen.width					//Check that x is in bounds
-	JOZ graphics.PutPixel.x_out_of_bounds
+	SLE $graphics.PutPixel.x_pos std.screen.width					//Check that x is in bounds
+		JMP graphics.PutPixel.x_out_of_bounds
 
-	ADD x std.screen.start
-	MOV s x
+	SGR $graphics.PutPixel.x_pos 0
+		JMP graphics.PutPixel.x_out_of_bounds
 
-	GRT y std.screen.height					//Check that y is in bounds
-	JOO graphics.PutPixel.y_out_of_bounds
+	SLE $graphics.PutPixel.y_pos std.screen.height					//Check that y is in bounds
+		JMP graphics.PutPixel.y_out_of_bounds
 
-	MUL y std.screen.width
-	ADD s x
+	SGR $graphics.PutPixel.y_pos 0									//Check that y is in bounds
+		JMP graphics.PutPixel.y_out_of_bounds
+
+	MUL $graphics.PutPixel.y_pos std.screen.width
+	ADD s $graphics.PutPixel.x_pos
+	ADD s std.screen.start
 	MOV $std.screen.color $s				//addr = y*width+x
 	RET
 
@@ -234,11 +189,8 @@ HLT
 	SGR $graphics.FillRectangle.x0 0
 		MOV 0 $graphics.FillRectangle.x0
 
-
-
 	MOV $graphics.FillRectangle.x0 $graphics.FillRectangle.x_pos
 	MOV $graphics.FillRectangle.y0 $graphics.FillRectangle.y_pos
-
 
 	#graphics.FillRectangle.outer
 		SLE $graphics.FillRectangle.y_pos $graphics.FillRectangle.y1
@@ -395,19 +347,17 @@ HLT
 		RET												//Assert that sprite will not lie outside screen
 
 	#graphics.DrawScaledSprite.outer_loop
-		SNE $graphics.DrawScaledSprite.y_pos $graphics.DrawScaledSprite.h1
-			RET											//We put the break codition here instead.
 
 		#graphics.DrawScaledSprite.inner_loop
 
 			//First we must compute the corresponding pixel in the sprites bitmap
-			SUB $graphics.DrawScaledSprite.w0 1
-			MUL $graphics.DrawScaledSprite.x_pos s
+			//SUB $graphics.DrawScaledSprite.w0 1
+			MUL $graphics.DrawScaledSprite.x_pos $graphics.DrawScaledSprite.w0
 			DIV s $graphics.DrawScaledSprite.w1
 			MOV s x									// (x*(w0-1))/w1
 
-			SUB $graphics.DrawScaledSprite.h0 1
-			MUL $graphics.DrawScaledSprite.y_pos s
+			//SUB $graphics.DrawScaledSprite.h0 1
+			MUL $graphics.DrawScaledSprite.y_pos  $graphics.DrawScaledSprite.h0
 			DIV s $graphics.DrawScaledSprite.h1
 			MOV s y									// (y*(h0-1))/h1
 
@@ -438,6 +388,9 @@ HLT
 
 		INC $graphics.DrawScaledSprite.y_pos
 
+		SEQ $graphics.DrawScaledSprite.y_pos $graphics.DrawScaledSprite.h1
+			JMP graphics.DrawScaledSprite.outer_loop	//We put the break codition here instead.
+		RET
 		JMP graphics.DrawScaledSprite.outer_loop
 
 

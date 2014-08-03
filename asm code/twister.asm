@@ -23,10 +23,28 @@
 @twister.factor
 @twister.offs
 @twister.color_map+300
+@twister.start_row
+@twister.end_row
+
+JSR graphics.Clear
+JSR twister.INIT
+#liup
+	JSR twister.step_once
+	JSR graphics.UpdateAndWait
+	JSR twister.Clear
+	JMP liup
+
+
 
 JMP twister.ESCAPE
 
 #twister.INIT
+	MOV 0xFFF $std.screen.color
+	MOV std.screen.height s
+	MOV std.screen.width s
+	MOV 0 s
+	MOV 0 s
+	JSR graphics.FillRectangle
 	JSR twister.ComputeColorMap
 	MOV 1 $twister.toggle
 	MOV 0 $twister.x1
@@ -36,8 +54,10 @@ JMP twister.ESCAPE
 	MOV 0 $twister.y_pos
 	MOV 0 $twister.angle
 	MOV 0 $twister.step
-	MOV 5 $twister.factor
-	MOV 80 $twister.offs
+	MOV 3 $twister.factor
+	MOV 320 $twister.offs
+	MOV 0 $twister.start_row
+	MOV std.screen.height $twister.end_row
 	RET
 JSR graphics.Clear
 
@@ -54,16 +74,24 @@ JSR graphics.Clear
 		JMP twister.start
 
 	MOV 0 $twister.y_pos
+	ADD 15 $twister.start_row
+	MOV s $twister.start_row
+	ADD 15 $twister.end_row
+	MOV s $twister.end_row
+
+	SNE $twister.end_row twister.texture_height
+		HLT
+
 	//JSR graphics.UpdateAndWait
 	RET
 	HLT
 
 #twister.Clear
-	MOV 0x000 $std.screen.color
+	MOV 0xFFF $std.screen.color
 	MOV std.screen.height s
-	MOV 140 s
+	MOV 405 s
 	MOV 0 s
-	MOV 0 s
+	MOV 235 s
 	JSR graphics.FillRectangle
 	RET
 
@@ -131,9 +159,13 @@ JSR graphics.Clear
 	#twister.Line.loop
 		//MOV 0xBA116 y
 
-		MUL $twister.temp_x twister.map_length
+		ADD $twister.y_pos $twister.start_row
+		MUL s twister.texture_width
+		MUL $twister.temp_x twister.texture_width
 		DIV s $twister.line_length
-		ADD s $twister.map_start
+		ADD s s
+		ADD s twister.texture_start
+
 		MOV $s $std.screen.color	//Color = ((x * map_length) / line_length) + map_start
 
 		MOV $twister.y_pos s
@@ -244,4 +276,16 @@ JSR graphics.Clear
 
 
 		RET
+
+! twister.texture_width = 170
+! twister.texture_height = 7500
+# twister.texture_start
+< twist.mem
+#twister.texture_end
+NOP
+
+
+
+
+
 #twister.ESCAPE

@@ -6,14 +6,22 @@
 @code.line
 @code.column
 @code.color
-JMP code.ESCAPE
-#code.PlayScene
+@code.offs
 
+//JSR code.PlayScene
+//HLT
+
+JMP code.ESCAPE
+
+
+
+#code.PlayScene
 	JSR graphics.Clear
 	MOV 0 $code.start_line
 	MOV 60 $code.end_line
 	MOV 0 $code.line
 	MOV 0 $code.column
+	MOV 0 $code.offs
 	JSR std.io.INIT
 
 
@@ -26,7 +34,7 @@ JMP code.ESCAPE
 	JSR graphics.UpdateAndWait
 	//MOV 0x000 $code.color
 	MOV 0x000 $std.io.text_color
-	#lewp
+	#code.lewp
 
 			MUL $code.line code.line_width
 			ADD s $code.column
@@ -36,14 +44,36 @@ JMP code.ESCAPE
 			SNE	x 0					//Shit be null terminated
 				JMP code.next_line
 
+			AND $code.color 0xF00
+			SFT s -8
+			MUL $code.column s
+			DIV s code.line_width
+			SFT s 8
+			AND $code.color 0x0F0
+			SFT s -4
+			MUL $code.column s
+			DIV s code.line_width
+			SFT s 4
+			AND $code.color 0x00F
+			MUL $code.column s
+			DIV s code.line_width
+			OOR s s
+			OOR s s
+
+			MOV s $std.io.text_color
+
+			ADD $std.io.x_pos $code.offs
+			MOV s $std.io.x_pos
 			MOV x s
 			JSR std.io.PrintCharacter
 			//INCREMENT THE CHAR POS
-			ADD $std.io.x_pos std.io.char_width_increment
+			SUB $std.io.x_pos $code.offs
+
+			ADD s std.io.char_width_increment
 			MOV s $std.io.x_pos
 
 			INC $code.column
-			JMP lewp
+			JMP code.lewp
 
 			#code.next_line
 			JSR std.io.NewLine
@@ -58,12 +88,12 @@ JMP code.ESCAPE
 			MOV s x
 			#code.skip1
 			ADD x code.color_table
-			MOV $s $std.io.text_color
-
+			//MOV $s $std.io.text_color
+			MOV $s $code.color
 
 
 			SEQ $code.line $code.end_line
-				JMP lewp
+				JMP code.lewp
 			//RESTART
 			JSR graphics.Update
 
@@ -90,13 +120,13 @@ JMP code.ESCAPE
 			ADD code.text_start s
 			SLE	s code.text_end
 				RET
-			JMP lewp
+			JMP code.lewp
 
 
 
 
 
-JMP lewp
+//JMP lewp
 
 
 NOP

@@ -65,7 +65,7 @@ JSR graphics.UpdateAndWait
 	#demo.scene3
 		JSR fader.step_once
 		SUB $std.timer_address $demo.timer
-		SGR s 50000
+		SGR s 1000
 			JMP demo.scene3
 
 	JSR stars.PlayScene

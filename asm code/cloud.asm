@@ -76,6 +76,5 @@ MOV 0xCAFE y
 	//JSR std.WaitMilli
 	//JSR graphics.UpdateAndWait
 	JMP start
-
 HLT
 
