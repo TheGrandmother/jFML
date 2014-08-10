@@ -1,7 +1,12 @@
 < graphics.asm
 < std.asm
 < std.math.asm
+JSR sprites.INIT
+JSR sprites.IncFreq
+#laup
+	JSR sprites.step_once
 
+JMP laup
 @sprites.angle
 @sprites.x0
 @sprites.y0
@@ -222,6 +227,7 @@ JMP sprites.ESCAPE
 	@sprites.UpdateCordinates.temp_x
 	@sprites.UpdateCordinates.temp_y
 	@sprites.UpdateCordinates.temp_z
+	@sprites.mupp_scale
 	MOV 2 $sprites.UpdateCordinates.factor
 	MOV 5 $sprites.UpdateCordinates.sclaing_factor
 

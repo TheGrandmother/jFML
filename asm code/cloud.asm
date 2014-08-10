@@ -1,80 +1,172 @@
 < std.constants.asm
 < std.asm
 < graphics.asm
-@x_pos
-@y_pos
-@x_middle
-@y_middle
-@inc
-MOV 0xDEAD y
-DIV std.screen.width 2
-MOV s $x_pos
-MOV $x_pos $x_middle
-DIV std.screen.height 2
-MOV s $y_pos
-MOV $y_pos $y_middle
-MOV 0x000 $std.screen.color
-MOV 0xCAFE y
-//JSR graphics.Clear
-#start
 
-//UPDATE PIXEL POSITION
-	JSR std.Random
-	JSR std.Abs
-	MOD s 3
-	SUB s 1
-	ADD s $x_pos
-	MOV s $x_pos
-	JSR std.Random
-	JSR std.Abs
-	MOD s 3
-	SUB s 1
-	ADD s $y_pos
-	MOV s $y_pos
-	SLE $x_pos std.screen.width
-	JMP out_of_bounds
-	SGR $x_pos 0
-	JMP out_of_bounds
-	SLE $y_pos std.screen.height
-	JMP out_of_bounds
-	SGR $y_pos 0
-	JMP out_of_bounds
-	JMP skip_out_of_bounds
-	#out_of_bounds
-		MOV $x_middle $x_pos
-		MOV $y_middle $y_pos
-		ADD 1 $inc
-		MOD s 2
-		MOV s $inc
-	#skip_out_of_bounds
 
-//GET AND ALTER COLOR
+@cloud.step
+@cloud.max_step
+@cloud.color_table+48
+@cloud.x_pos
+@cloud.y_pos
 
-	SEQ $inc 1
-	JMP decrement_color
-	#increment_color
-	MOV $y_pos s
-	MOV $x_pos s
-	JSR graphics.GetPixel
-	ADD s 0x112
-	JSR graphics.SetColor
-	JMP skip_colors
-	#decrement_color
-	MOV $y_pos s
-	MOV $x_pos s
-	JSR graphics.GetPixel
-	SUB s 0x112
-	JSR graphics.SetColor
-	#skip_colors
 
-//WRITE PIXEL TO SCREEN
-	MOV $y_pos s
-	MOV $x_pos s
-	JSR graphics.PutPixel
-	JSR graphics.Update
-	//MOV 1 s
-	//JSR std.WaitMilli
-	//JSR graphics.UpdateAndWait
-	JMP start
+
+
+JSR graphics.Clear
+JSR cloud.ComputeTable
+MOV 0 $cloud.step
+MOV 1000 $cloud.max_step
+#liup
+JSR cloud.DoWalk
+JSR graphics.UpdateAndWait
+JMP liup
 HLT
+
+
+
+
+#cloud.DoWalk
+	MOV 0 $cloud.step
+	DIV std.screen.width 2
+	MOV s $cloud.x_pos
+	DIV std.screen.height 2
+	MOV s $cloud.y_pos
+	#cloud.DoWalk.loop
+		//MUL $cloud.step 48
+		//DIV s $cloud.max_step
+		//ADD s cloud.color_table
+		//MOV $s $std.screen.color
+
+		JSR cloud.GetAndAlterColour
+
+		MOV $cloud.y_pos s
+		MOV $cloud.x_pos s
+		JSR graphics.QuickPutPixel
+
+
+		JSR std.Random
+		JSR std.Abs
+		MOD s 3
+		SUB s 1
+		ADD s $cloud.x_pos
+		MOV s $cloud.x_pos
+
+		JSR std.Random
+		JSR std.Abs
+		MOD s 3
+		SUB s 1
+		ADD s $cloud.y_pos
+		MOV s $cloud.y_pos
+
+		INC $cloud.step
+		SGR $cloud.step $cloud.max_step
+			JMP cloud.DoWalk.loop
+		RET
+
+#cloud.GetAndAlterColour
+	@cloud.original
+	@cloud.new
+	@cloud.table
+	MUL $cloud.y_pos std.screen.width
+	ADD s $cloud.x_pos
+	ADD s cloud.color_table
+	MOV $s $cloud.original
+
+	MUL $cloud.step 48
+	DIV s $cloud.max_step
+	ADD s cloud.color_table
+	MOV $s $cloud.table
+
+	SFT $cloud.original -8
+	SFT $cloud.table -8
+	ADD s s
+	AND s 0x00F
+	SFT s 8
+	OOR s $cloud.new
+
+	SFT $cloud.original -4
+	SFT $cloud.table -4
+	ADD s s
+	AND s 0x00F
+	SFT s 4
+	OOR s $cloud.new
+
+	ADD $cloud.original $cloud.table
+	AND s 0x00F
+	OOR s $cloud.new
+
+	MOV $cloud.new $std.screen.color
+
+	RET
+
+
+
+
+
+
+
+#cloud.ComputeTable
+	@cloud.ComputeTable.index
+	MOV 0 $cloud.ComputeTable.index
+	#cloud.ComputeTable.loop
+
+		SGR $cloud.ComputeTable.index 15
+			JMP cloud.ComputeTable.less_then_16
+
+		SGR $cloud.ComputeTable.index 31
+			JMP cloud.ComputeTable.less_then_32
+
+		SGR $cloud.ComputeTable.index 47
+			JMP cloud.ComputeTable.less_then_48
+
+		RET
+
+		#cloud.ComputeTable.less_then_16
+			ADD $cloud.ComputeTable.index cloud.color_table
+			MOD $cloud.ComputeTable.index 16
+			SFT s 8
+			MOV s $s
+			INC $cloud.ComputeTable.index
+			JMP cloud.ComputeTable.loop
+
+
+		#cloud.ComputeTable.less_then_32
+			ADD $cloud.ComputeTable.index cloud.color_table
+			MOD $cloud.ComputeTable.index 16
+			SFT s 4
+			OOR s 0xF00
+			MOV s $s
+			INC $cloud.ComputeTable.index
+			JMP cloud.ComputeTable.loop
+
+		#cloud.ComputeTable.less_then_48
+			ADD $cloud.ComputeTable.index cloud.color_table
+			MOD $cloud.ComputeTable.index 16
+			OOR s 0xFF0
+			MOV s $s
+			INC $cloud.ComputeTable.index
+			JMP cloud.ComputeTable.loop
+
+
+		#cloud.ComputeTable.skip
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 

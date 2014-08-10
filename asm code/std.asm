@@ -1,5 +1,7 @@
 //This is a halfdone library of standard functions.
 
+< std.constants.asm
+
 @std.Random.current
 !std.Random.modulo = 0x7FFFFFFF
 !std.Random.multiplier = 0x7FFFFFED

@@ -42,10 +42,9 @@ public class Assembler {
 	int current_address;
 	int start_address;
 	static final String int_regex = "((-?0x[a-fA-F[0-9]]+)|(-?\\d+))";
-	static final String raw_regex = ":" + int_regex;
+	static final String raw_regex = ":\\s*((" + int_regex + ")|(\".*\"))\\s*";
 	static final String include_regex = "<\\s*[\\w.-/]+((\\.asm)|(\\.mem))\\s*";
-	static final String pointer_regex = "@\\s*\\D[\\w.-]+\\s*(\\+\\s*"
-			+ int_regex + ")?";
+	static final String pointer_regex = "@\\s*\\D[\\w.-]+\\s*(\\+\\s*" + int_regex + ")?";
 	static final String label_regex = "#\\s*\\D[\\w.-]+";
 	static final String constant_regex = "!\\s*\\D[\\w.-]+\\s*=\\s*"
 			+ int_regex;
@@ -56,7 +55,7 @@ public class Assembler {
 		pointer_map = new HashMap<String, Pointer>();
 		label_map = new HashMap<String, Label>();
 		constant_map = new HashMap<String, Constant>();
-		file_map = new HashMap<String,Boolean>();
+		file_map = new HashMap<String, Boolean>();
 		token_list = new LinkedList<Token>();
 		machinecode_list = new LinkedList<Integer>();
 		current_address = default_start_address;
@@ -96,14 +95,13 @@ public class Assembler {
 			break;
 		}
 
-		
-		a.working_directory = a.in_name.substring(0,a.in_name.lastIndexOf("/")+1);
+		a.working_directory = a.in_name.substring(0,
+				a.in_name.lastIndexOf("/") + 1);
 		try {
 			a.scanFile(a.in_name);
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
-
 
 		a.resolvePointers();
 		a.resolveAllRefernces();
@@ -211,7 +209,7 @@ public class Assembler {
 			pointer_map.put(name, new Pointer(name, 0, line_number,
 					current_file));
 		} else {
-			pointer_map.put(name, new Pointer(name, getNumber(data)+1,
+			pointer_map.put(name, new Pointer(name, getNumber(data) + 1,
 					line_number, current_file));
 		}
 	}
@@ -227,24 +225,37 @@ public class Assembler {
 	}
 
 	void parseRaw(String line) throws SyntaxError {
-		try {
-			token_list.add(new Data(getNumber(line)));
-			current_address++;
-		} catch (Exception e) {
-			throw new SyntaxError(e.getMessage());
+		if (line.contains("\"")) {
+			String text;
+			text = line.substring(line.indexOf("\"")+1,line.lastIndexOf("\""));
+			char[] data = text.toCharArray();
+			for (int i = 0; i < data.length; i++) {
+				token_list.add(new Data(data[i]));
+				System.out.println((int)data[i]);
+				current_address++;
+			}
+		} else {
+			try {
+				token_list.add(new Data(getNumber(line)));
+				current_address++;
+			} catch (Exception e) {
+				throw new SyntaxError(e.getMessage());
+			}
 		}
 
 	}
 
 	void readFile(String line) throws AssemblerError, SyntaxError {
 		int temp_line_number;
-		
+
 		String file_name = line.substring(line.indexOf("<") + 1).trim();
 		String extension = file_name.substring(file_name.length() - 4,
 				file_name.length());
-//		System.out.println("Read another file namley: " + file_name);
-//		System.out.println("extension: " + extension);
-		if(file_name != in_name){file_name = working_directory+file_name;}
+		// System.out.println("Read another file namley: " + file_name);
+		// System.out.println("extension: " + extension);
+		if (file_name != in_name) {
+			file_name = working_directory + file_name;
+		}
 		if (extension.matches("\\.asm")) {
 
 			temp_line_number = line_number;
@@ -260,13 +271,12 @@ public class Assembler {
 			file_map.put(file_name, true);
 
 			line_number = temp_line_number;
-			
-//			System.out.println("Read another file namley: " + file_name);
+
+			// System.out.println("Read another file namley: " + file_name);
 			return;
-			
-			
+
 		} else if (extension.matches("\\.mem")) {
-			
+
 			current_file = file_name;
 			try {
 				BufferedReader reader = new BufferedReader(new FileReader(
@@ -278,7 +288,7 @@ public class Assembler {
 					line_number++;
 				}
 				reader.close();
-				
+
 			} catch (FileNotFoundException e) {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
@@ -525,7 +535,7 @@ public class Assembler {
 				throw new SyntaxError("Wrong number of arguments: " + line);
 			}
 			break;
-			
+
 		case "SNE":
 			action = 13;
 			operation = 0;
@@ -695,7 +705,7 @@ public class Assembler {
 	void resolvePointers() {
 		current_address++;
 		for (Pointer p : pointer_map.values()) {
-			//p.value = current_address + p.offset;
+			// p.value = current_address + p.offset;
 			p.value = current_address;
 			p.resolved = true;
 			current_address += 1 + p.offset;

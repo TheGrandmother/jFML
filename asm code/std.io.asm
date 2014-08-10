@@ -173,6 +173,10 @@ HLT
 	RET
 HLT
 
+//Prints a decimal number.
+#std.io.PrintDecimal
+	@std.io.PrintDecimal.n
+	! std.io.PrintCharacter.minus_sign = 1483
 
 #std.io.ESCAPE
 
