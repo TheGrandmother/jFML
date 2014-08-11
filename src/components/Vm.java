@@ -383,7 +383,7 @@ public class Vm {
 			if (a2 > 0) {
 				s.push(a1 << a2);
 			} else {
-				s.push(a1 >> (-a2));
+				s.push(a1 >>> (-a2));	// Changed to do unsigned shifting.
 			}
 			break;
 		default:

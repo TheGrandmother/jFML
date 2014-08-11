@@ -24,15 +24,12 @@
 @std.io.x_pos
 @std.io.y_pos
 @std.io.text_color
-//#std.io.INIT
-	MOV 0xFEA1 y
-	MOV 0xFFF $std.io.text_color
-	MOV std.io.charset_start $std.io.char_pointer
-	MOV std.io.line_margin $std.io.x_pos
-	MOV 0 $std.io.y_pos
+
+JSR std.io.INIT
 JMP std.io.ESCAPE
 
 #std.io.INIT
+	MOV 0xFFF $std.io.text_color
 	MOV std.io.charset_start $std.io.char_pointer
 	MOV std.io.line_margin $std.io.x_pos
 	MOV 0 $std.io.y_pos
@@ -44,16 +41,6 @@ JMP std.io.ESCAPE
 	ADD std.irq_table_start 1
 	MOV std.io.KeyHandler $s
 	RET
-MOV 0xAbed y
-JSR graphics.Clear
-JSR graphics.UpdateAndWait
-
-
-
-
-
-
-HLT
 
 //Ascii value for char is on stack.
 #std.io.PrintCharacter
@@ -176,7 +163,66 @@ HLT
 //Prints a decimal number.
 #std.io.PrintDecimal
 	@std.io.PrintDecimal.n
-	! std.io.PrintCharacter.minus_sign = 1483
+	@std.io.PrintDecimal.factor
+	@std.io.PrintDecimal.leading_zero
+	@std.io.PrintDecimal.tmp
+	! std.io.PrintDecimal.minus_sign = 45
+	! std.io.PrintDecimal.digits_start = 48
+
+	MOV s $std.io.PrintDecimal.n
+	MOV 1_000_000_000 $std.io.PrintDecimal.factor
+	MOV 1 $std.io.PrintDecimal.leading_zero
+	MOV 0 $std.io.PrintDecimal.tmp
+
+
+	SLE $std.io.PrintDecimal.n 0
+		JMP std.io.PrintDecimal.positive_skip
+
+	MOV $std.io.PrintDecimal.n s
+	JSR std.Abs
+	MOV s $std.io.PrintDecimal.n
+	MOV std.io.PrintDecimal.minus_sign s
+	JSR std.io.PrintCharacter
+	JSR std.io.Forward
+
+	#std.io.PrintDecimal.positive_skip
+
+	#std.io.PrintDecimal.loop
+
+		DIV $std.io.PrintDecimal.factor 10
+		DIV $std.io.PrintDecimal.n $std.io.PrintDecimal.factor
+		MUL $std.io.PrintDecimal.factor s
+		SUB $std.io.PrintDecimal.n s
+		DIV s s
+		MOV s $std.io.PrintDecimal.tmp
+
+		SUB $std.io.PrintDecimal.tmp 0
+		SUB $std.io.PrintDecimal.leading_zero 1
+		EQL s s
+		SNE s 1
+			JMP std.io.PrintDecimal.skip_print
+
+		MOV 0 $std.io.PrintDecimal.leading_zero
+
+		ADD $std.io.PrintDecimal.tmp std.io.PrintDecimal.digits_start
+		JSR std.io.PrintCharacter
+		JSR std.io.Forward
+
+		#std.io.PrintDecimal.skip_print
+
+		DIV $std.io.PrintDecimal.factor 10
+		MOV s $std.io.PrintDecimal.factor
+
+		SEQ $std.io.PrintDecimal.factor 1
+			JMP std.io.PrintDecimal.loop
+		RET
+
+
+
+
+
+
+
 
 #std.io.ESCAPE
 

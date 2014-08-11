@@ -11,6 +11,13 @@ JMP graphics.ESCAPE
 	RET
 HLT
 
+#graphics.UpdateAndWait
+	MOV 1 $std.screen.update_bit
+	#graphics.UpdateAndWait.loop
+	SEQ $std.screen.update_bit 0
+	JMP graphics.UpdateAndWait.loop
+	RET
+
 //Color is on stack
 //If color is greater than 0xFFF it will be set to 0xFFF
 //IF color is less than 0x000 it will be set to 0x000
@@ -70,12 +77,7 @@ HLT
 HLT
 
 
-#graphics.UpdateAndWait
-	MOV 1 $std.screen.update_bit
-	#graphics.UpdateAndWait.loop
-	SEQ $std.screen.update_bit 0
-	JMP graphics.UpdateAndWait.loop
-	RET
+
 
 #graphics.Clear
 

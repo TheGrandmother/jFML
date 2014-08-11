@@ -231,9 +231,10 @@ public class Assembler {
 			char[] data = text.toCharArray();
 			for (int i = 0; i < data.length; i++) {
 				token_list.add(new Data(data[i]));
-				System.out.println((int)data[i]);
 				current_address++;
 			}
+			token_list.add(new Data(0));		//Strings are NULL terminated.
+			current_address++;
 		} else {
 			try {
 				token_list.add(new Data(getNumber(line)));
