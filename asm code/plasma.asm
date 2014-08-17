@@ -15,12 +15,12 @@
 !plasma.lookup_table = 0xA00_000	//Let us just pray to Turing that there is no data here
 JSR graphics.Clear
 MOV 000 $plasma.x_start
-MOV 640 $plasma.x_size
+MOV 320 $plasma.x_size
 ADD $plasma.x_start $plasma.x_size
 MOV s $plasma.x_end
 
 MOV 000 $plasma.y_start
-MOV 480 $plasma.y_size
+MOV 240 $plasma.y_size
 ADD $plasma.y_start $plasma.y_size
 MOV s $plasma.y_end
 
@@ -30,6 +30,7 @@ MOV 1 $plasma.d
 MOV 0 $plasma.step
 MOV 0  $plasma.phase
 JSR graphics.Clear
+
 #laupozarus
 	JSR plasma.StepOnce
 	ADD $plasma.step 5
@@ -40,17 +41,46 @@ JMP laupozarus
 
 
 #plasma.StepOnce
+	@plasma.StepOnce.temp_x
+	@plasma.StepOnce.temp_y
 	MOV 0xABCD y
 	MOV $plasma.x_start $plasma.x_pos
 	MOV $plasma.y_start $plasma.y_pos
 	#plasma.Step.outer_loop
 		#plasma.Step.inner_loop
-			JSR plasma.GetColor
 
-				MUL $plasma.y_pos std.screen.width
-				ADD $plasma.x_pos std.screen.start
-				ADD s s
-				MOV $std.screen.color $s
+			JSR plasma.GetColor
+			MUL $plasma.y_pos 2
+			MOV s $plasma.StepOnce.temp_y
+			MUL $plasma.x_pos 2
+			MOV s $plasma.StepOnce.temp_x
+
+			MUL $plasma.StepOnce.temp_y std.screen.width
+			ADD $plasma.StepOnce.temp_x std.screen.start
+			ADD s s
+			MOV $std.screen.color $s
+
+			INC $plasma.StepOnce.temp_y
+
+			MUL $plasma.StepOnce.temp_y std.screen.width
+			ADD $plasma.StepOnce.temp_x std.screen.start
+			ADD s s
+			MOV $std.screen.color $s
+
+			INC $plasma.StepOnce.temp_x
+
+			MUL $plasma.StepOnce.temp_y std.screen.width
+			ADD $plasma.StepOnce.temp_x std.screen.start
+			ADD s s
+			MOV $std.screen.color $s
+
+			DEC $plasma.StepOnce.temp_y
+
+			MUL $plasma.StepOnce.temp_y std.screen.width
+			ADD $plasma.StepOnce.temp_x std.screen.start
+			ADD s s
+			MOV $std.screen.color $s
+
 
 
 			INC $plasma.x_pos
@@ -74,28 +104,30 @@ JMP laupozarus
 
 	MUL $plasma.step 2
 	ADD s $plasma.x_pos
-			MOD s 360
-			ADD s std.math.sin_table
-			MOV $s s
+	MOD s 360
+	ADD s std.math.sin_table
+	MOV $s s
 	MUL s 3
 
 	MUL 5 $plasma.step
 	ADD s $plasma.x_pos
 	MUL s 2
 	ADD s $plasma.y_pos
-			MOD s 360
-			ADD s std.math.sin_table
-			MOV $s s
+	MOD s 360
+	ADD s std.math.sin_table
+	MOV $s s
 
 	ADD s s
 	ADD s s
 
 	MUL s 48
 	DIV s plasma.max_value
-			MOV s x				//INLINED
-			MOV x s
-			SGR x 0
-			MUL s -1
+
+	MOV s x				//INLINED
+	MOV x s
+	SGR x 0
+	MUL s -1
+
 	ADD s plasma.color_table
 	MOV $s $std.screen.color
 
@@ -112,20 +144,15 @@ JMP laupozarus
 	#plasma.GenerateLookupTable.outer_loop
 		#plasma.GenerateLookupTable.inner_loop
 
-			JSR plasma.GenerateLookupTable.StaticFunction
-			MOV s x
+
+
 
 			MUL $plasma.GenerateLookupTable.y_pos std.screen.width
 			ADD s $plasma.GenerateLookupTable.x_pos
 			ADD s plasma.lookup_table
-			MOV x $s
+			JSR plasma.GenerateLookupTable.StaticFunction
+			MOV s $s
 
-
-			MOV x $std.screen.color
-			MOV $plasma.GenerateLookupTable.y_pos s
-			MOV $plasma.GenerateLookupTable.x_pos s
-			JSR graphics.PutPixel
-			JSR graphics.Update
 
 
 			INC $plasma.GenerateLookupTable.x_pos

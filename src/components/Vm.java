@@ -75,21 +75,21 @@ public class Vm {
 		}
 
 		int instruction = -1;
-		try {
-			instruction = ram.read(pc.getAddress());
-		} catch (Exception e) {
-			e.printStackTrace();
-			halt_flag = true;
-			return;
-		}
 
-		instructionBreakdown(instruction);
+		instruction = ram.read(pc.getAddress());
+
+
+		//Breakdown instruction
+		a1_code = instruction & 0x000F;
+		a2_code = (instruction & 0x00F0) >> 4;
+		operation = (instruction & 0x0F00) >> 8;
+		action = (instruction & 0xF000) >> 12;
 
 		increment_offset = 1;
 
 		jumping = false;
 
-		if (!(action == 0 && operation == 0)) {
+		
 			if (action == 0 && operation != 0) {
 
 				executeOperation();
@@ -100,7 +100,7 @@ public class Vm {
 
 			}
 
-		}
+		
 
 		if (!jumping) {
 			pc.increment(increment_offset);
@@ -121,7 +121,7 @@ public class Vm {
 	 * @throws StackEmptyException
 	 */
 	void resolveA1() throws InvalidAddressExcption, StackEmptyException {
-		if ((a1_code & 0b1000) == 0) {
+		//if ((a1_code & 0b1000) == 0) {
 
 			switch (a1_code & 0b0011) {
 			case 0:
@@ -148,7 +148,7 @@ public class Vm {
 			if ((a1_code & 0b0100) != 0) {
 				a1 = ram.read(a1);
 			}
-		}
+		//}
 	}
 
 	/**
@@ -160,7 +160,7 @@ public class Vm {
 	 * @throws StackEmptyException
 	 */
 	void resolveA2() throws InvalidAddressExcption, StackEmptyException {
-		if ((a2_code & 0b1000) == 0) {
+		//if ((a2_code & 0b1000) == 0) {
 
 			switch (a2_code & 0b0011) {
 			case 0:
@@ -188,7 +188,7 @@ public class Vm {
 			if ((a2_code & 0b0100) != 0) {
 				a2 = ram.read(a2);
 			}
-		}
+		//}
 	}
 
 	/**
@@ -206,11 +206,11 @@ public class Vm {
 		switch (operation) {
 		// INC
 		case 1:
-			if ((a1_code & 0b1000) != 0 || (a1_code == 0b0011)) {
-				throw new InvalidInstructionException(
-						"Impropper argument given to INC instruction: "
-								+ Integer.toHexString(a1_code));
-			}
+			//if ((a1_code & 0b1000) != 0 || (a1_code == 0b0011)) {
+			//	throw new InvalidInstructionException(
+			//			"Impropper argument given to INC instruction: "
+			//					+ Integer.toHexString(a1_code));
+			//}
 			switch (a1_code & 0b0111) {
 
 			case 0:
@@ -225,7 +225,7 @@ public class Vm {
 				break;
 			case 4:
 				tmp_addr = s.pop();
-				tmp = ram.read(s.pop());
+				tmp = ram.read(tmp_addr);
 				ram.write(tmp + 1, tmp_addr);
 
 				break;
@@ -251,11 +251,11 @@ public class Vm {
 			break;
 		// DEC
 		case 2:
-			if ((a1_code & 0b1000) != 0 || (a1_code == 0b0011)) {
-				throw new InvalidInstructionException(
-						"Impropper argument given to DEC instruction: "
-								+ Integer.toHexString(a1_code));
-			}
+			//if ((a1_code & 0b1000) != 0 || (a1_code == 0b0011)) {
+			//	throw new InvalidInstructionException(
+			//			"Impropper argument given to DEC instruction: "
+			//					+ Integer.toHexString(a1_code));
+			//}
 			switch (a1_code & 0b0111) {
 			case 0:
 				s.push(s.pop() - 1);
@@ -269,7 +269,7 @@ public class Vm {
 				break;
 			case 4:
 				tmp_addr = s.pop();
-				tmp = ram.read(s.pop());
+				tmp = ram.read(tmp_addr);
 				ram.write(tmp - 1, tmp_addr);
 
 				break;
