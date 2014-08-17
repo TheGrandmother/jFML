@@ -233,8 +233,7 @@ public class Assembler {
 				token_list.add(new Data(data[i]));
 				current_address++;
 			}
-			token_list.add(new Data(0));		//Strings are NULL terminated.
-			current_address++;
+			//current_address++;
 		} else {
 			try {
 				token_list.add(new Data(getNumber(line)));

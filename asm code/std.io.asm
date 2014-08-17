@@ -130,16 +130,9 @@ HLT
 HLT
 
 #std.io.KeyHandler
-//	MOV 0xBABE y
-//	MOV 33 s
-//	JSR std.io.PrintCharacter
-//	JSR graphics.UpdateAndWait
-//	MOV 0xBABE y
-//	HLT
-//	RET
+
 	MOV x s
 	MOV y s
-	MOV 0xBABE y
 	EQL $std.io.key_value std.io.invalid_key
 	JOO std.io.KeyHandler.ESCAPE
 	LES $std.io.key_value 127
@@ -161,6 +154,7 @@ HLT
 HLT
 
 //Prints a decimal number.
+//This subroutine is shit. It only prints the last 9 digits of any number :/
 #std.io.PrintDecimal
 	@std.io.PrintDecimal.n
 	@std.io.PrintDecimal.factor
@@ -175,6 +169,15 @@ HLT
 	MOV 0 $std.io.PrintDecimal.tmp
 
 
+	SEQ $std.io.PrintDecimal.n 0
+		JMP std.io.PrintDecimal.not_zero
+	MOV 48 s
+	JSR std.io.PrintCharacter
+	JSR std.io.Forward
+	RET
+
+
+	#std.io.PrintDecimal.not_zero
 	SLE $std.io.PrintDecimal.n 0
 		JMP std.io.PrintDecimal.positive_skip
 

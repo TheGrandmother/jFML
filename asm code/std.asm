@@ -58,15 +58,10 @@ HLT
 #std.Abs
 	MOV s x
 	MOV x s
-	LES s 0
-	JOO std.Abs.less_than_0
-	MOV x s
+	SGR x 0
+		MUL s -1
 	RET
-	HLT
-	#std.Abs.less_than_0
-	MUL x -1
-	RET
-HLT
+
 
 
 #std.ESCAPE

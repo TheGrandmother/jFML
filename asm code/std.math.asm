@@ -1,68 +1,21 @@
 ! std.math.max_int = 2147483647
-
 #std.math.INIT
 
 JMP std.math.ESCAPE
 
-
-
-
-// multiplicand is on top
-// dividend
-// divisor
-#std.math.frac
-
-HLT
 !std.math.Sin.max_value = 255
+//Returns Floor[Sin(s)*255] where s is in degrees
 #std.math.Sin
-	@arg
-	MOV s $arg
-	LES $arg 0
-	JOO std.math.Sin.less_than_zero
-		MOD $arg 360
-		MOV s $arg
+	@std.math.Sin.tmp
+	MOV s $std.math.Sin.tmp
+	MOD $std.math.Sin.tmp 360
+	SLE $std.math.Sin.tmp 0
 		JMP std.math.Sin.resolve
-
-	#std.math.Sin.less_than_zero
-		MUL $arg -1
-		MOD s 360
-		SUB 360 s
-		MOV s $arg
-
-
+	ADD 360 s
 	#std.math.Sin.resolve
-	 SGR $arg 90
-	 JMP std.math.Sin.0to90
-	 SGR $arg 180
-	 JMP std.math.Sin.90to180
-	 SGR $arg 270
-	 JMP std.math.Sin.180to270
-	 JMP std.math.Sin.270to360
-
-	#std.math.Sin.0to90
-		ADD std.math.sin_table $arg
-		MOV $s s
-		RET
-	#std.math.Sin.90to180
-		SUB 180 $arg
-		ADD s std.math.sin_table
-		MOV $s s
-		RET
-	#std.math.Sin.180to270
-		SUB $arg 180
-		ADD s std.math.sin_table
-		MOV $s s
-		MUL s -1
-		RET
-	#std.math.Sin.270to360
-		SUB 360 $arg
-		ADD s std.math.sin_table
-		MOV $s s
-		MUL s -1
-		RET
-
+	ADD s std.math.sin_table
+	MOV $s s
 	RET
-HLT
 
 //n mod m
 //n

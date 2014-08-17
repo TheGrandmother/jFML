@@ -4,11 +4,6 @@
 < std.io.asm
 
 
-
-!c1 = 0x00F
-!c2 = 0x008
-!c3 = 0x0F0
-!c4 = 0x080
 !twister.max_step = 20
 !twister.min_step = -20
 !twister.angle_factor = 10
@@ -22,17 +17,17 @@
 @twister.toggle
 @twister.factor
 @twister.offs
-@twister.color_map+300
 @twister.start_row
 @twister.end_row
+@twister.done
 
 JSR graphics.Clear
 JSR twister.INIT
-#liup
-	JSR twister.step_once
-	JSR graphics.UpdateAndWait
-	JSR twister.Clear
-	JMP liup
+//#liup/
+	//JSR twister.step_once
+	//JSR graphics.UpdateAndWait
+	//JSR twister.Clear
+	//JMP liup
 
 
 
@@ -45,7 +40,7 @@ JMP twister.ESCAPE
 	MOV 0 s
 	MOV 0 s
 	JSR graphics.FillRectangle
-	JSR twister.ComputeColorMap
+
 	MOV 1 $twister.toggle
 	MOV 0 $twister.x1
 	MOV 0 $twister.x2
@@ -58,8 +53,18 @@ JMP twister.ESCAPE
 	MOV 320 $twister.offs
 	MOV 0 $twister.start_row
 	MOV std.screen.height $twister.end_row
+	MOV 0 $twister.done
 	RET
 JSR graphics.Clear
+
+#twister.PlayScene
+	#twister.PlayScene.loop
+	JSR twister.step_once
+	JSR graphics.UpdateAndWait
+	JSR twister.Clear
+	SEQ $twister.done 1
+		JMP twister.PlayScene.loop
+	RET
 
 
 #twister.step_once
@@ -80,7 +85,7 @@ JSR graphics.Clear
 	MOV s $twister.end_row
 
 	SNE $twister.end_row twister.texture_height
-		HLT
+		MOV 1 $twister.done
 
 	//JSR graphics.UpdateAndWait
 	RET
@@ -168,9 +173,15 @@ JSR graphics.Clear
 
 		MOV $s $std.screen.color	//Color = ((x * map_length) / line_length) + map_start
 
-		MOV $twister.y_pos s
-		ADD $twister.x_start $twister.temp_x
-		JSR graphics.QuickPutPixel
+		//MOV $twister.y_pos s
+		//ADD $twister.x_start $twister.temp_x
+		//JSR graphics.QuickPutPixel
+
+			MUL $twister.y_pos std.screen.width
+			ADD s std.screen.start
+			ADD $twister.x_start $twister.temp_x
+			ADD s s
+			MOV $std.screen.color $s
 
 		INC $twister.temp_x
 		SEQ $twister.temp_x $twister.line_length
@@ -217,65 +228,7 @@ JSR graphics.Clear
 		DEC $twister.step
 	RET
 
-! twister.min_r = 0x8
-! twister.min_g = 0x2
-! twister.min_b = 0x0
-! twister.max_r = 0xF
-! twister.max_g = 0xF
-! twister.max_b = 0x2
-! twister.map_length = 300
-@twister.map_start
-@twister.map_end
-@twister.current_address
-@twister.offs1
-@twister.co
-@twister.x_val
-#twister.ComputeColorMap
-	MOV twister.color_map $twister.map_start	//Compute addresses
-	ADD twister.map_length $twister.map_start
-	MOV s $twister.map_end
 
-	MOV 0 $twister.x_val				// Init x
-
-	#twister.ComputeColorMap.loop
-		ADD $twister.x_val $twister.map_start
-		MOV s $twister.current_address	// Get address
-
-		//Compute red channel
-		SUB twister.max_b twister.min_b		//Compute offset
-		MUL $twister.x_val s
-		DIV s twister.map_length
-		ADD s twister.min_b 		//(offs*x)/length + min_color
-		MOV s x
-
-		//Compute green chanel
-		SUB twister.max_g twister.min_g		//Compute offset
-		MUL $twister.x_val s
-		DIV s twister.map_length
-		ADD s twister.min_g 		//(offs*x)/length + min_color
-		SFT s 4
-		OOR s x
-		MOV s x
-
-		//Compute green chanel
-		SUB twister.max_r twister.min_r		//Compute offset
-		MUL $twister.x_val s
-		DIV s twister.map_length
-		ADD s twister.min_r 		//(offs*x)/length + min_color
-		SFT s 8
-		OOR s x
-
-		MOV $twister.current_address y
-		MOV s $y				//Move to map
-
-		INC $twister.x_val
-
-		ADD $twister.x_val $twister.map_start
-		SEQ s $twister.map_end
-			JMP twister.ComputeColorMap.loop
-
-
-		RET
 
 ! twister.texture_width = 170
 ! twister.texture_height = 7500

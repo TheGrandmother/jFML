@@ -1,11 +1,11 @@
 < scroller.asm
 < graphics.asm
-< twister.asm
 < sprites.asm
 < fader.asm
 < code.asm
 < stars.asm
 < swipe.asm
+< twister.asm
 
 JSR graphics.Clear
 JSR graphics.UpdateAndWait
@@ -20,18 +20,7 @@ JSR graphics.UpdateAndWait
 	MOV $std.timer_address $demo.timer
 
 	#demo.scene1
-		JSR scroller.Clear
-		JSR twister.Clear
-		JSR scroller.step_once
-		JSR twister.step_once
-		JSR graphics.UpdateAndWait
-
-
-
-		SUB $std.timer_address $demo.timer
-		SGR s 500
-			JMP demo.scene1
-
+		JSR twister.PlayScene
 	MOV 0xFFF s
 	JSR swipe.Swipe
 

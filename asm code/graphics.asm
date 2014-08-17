@@ -90,18 +90,26 @@ HLT
 		JMP graphics.Clear.loop
 		RET
 
+
 #graphics.QuickPutPixel
+	//MOV s x
+	//MOV s y
+	ADD s std.screen.start
 	MOV s x
-	MOV s y
-	ADD x std.screen.start
-	MOV s x
-	MUL y std.screen.width
+	MUL s std.screen.width
 	ADD s x
 	MOV $std.screen.color $s
-
 	RET
 
-HLT
+//#graphics.QuickPutPixel
+//	MOV s x
+//	MOV s y
+//	ADD x std.screen.start
+//	MOV s x
+//	MUL y std.screen.width
+//	ADD s x
+//	MOV $std.screen.color $s
+//	RET
 
 // x <- Top
 // y

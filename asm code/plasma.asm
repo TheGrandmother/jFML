@@ -1,95 +1,204 @@
 < graphics.asm
 < std.math.asm
-@x_pos
-@y_pos
-@x_orig
-@y_orig
-@noise_x_offs
-@factor_thing
-@another_thing
-@x_size
-@y_size
+@plasma.x_pos
+@plasma.y_pos
+@plasma.phase
 
+@plasma.x_start
+@plasma.x_end
+@plasma.y_start
+@plasma.y_end
+@plasma.x_size
+@plasma.y_size
+@plasma.step
+@plasma.color_table+50
+!plasma.lookup_table = 0xA00_000	//Let us just pray to Turing that there is no data here
 JSR graphics.Clear
-MOV 0xFFF s
-DIV s 2
-MOV s $factor_thing
-MOV 0 $x_orig
-MOV 0 $y_orig
-MOV 0 $x_pos
-MOV 0 $y_pos
-MOV 0 $noise_x_offs
-MOV 0 $another_thing
-MOV 10 $x_size
-MOV 10 $y_size
-#loop
-		MOV $y_pos s
-		MOV $x_pos s
-		JSR plasma.NoisyFunction
-		JSR graphics.SetColor
-		MOV $y_pos s
-		MOV $x_pos s
-		JSR graphics.PutPixel
-		INC $x_pos
-		ADD $x_orig $x_size
-		SEQ $x_pos s
-		JMP loop
-	MOV $x_orig $x_pos
-	INC $y_pos
-	ADD $y_orig $y_size
-	SEQ $y_pos s
-	JMP loop
-DEC $y_orig
-DEC $x_orig
-MOV $y_orig s
-MOV $x_orig s
-MOV 0 $std.screen.color
-JSR graphics.PutPixel
-INC $y_orig
-INC $x_orig
+MOV 000 $plasma.x_start
+MOV 640 $plasma.x_size
+ADD $plasma.x_start $plasma.x_size
+MOV s $plasma.x_end
 
-JSR graphics.UpdateAndWait
-//JSR graphics.Clear
-ADD 1 $noise_x_offs
-MOV s $noise_x_offs
-MOV $x_orig $x_pos
-MOV $y_orig $y_pos
-INC $y_orig
-INC $x_orig
-MOV $another_thing s
-MUL s 5
-JSR std.math.Sin
-DIV s 80
-ADD s $x_orig
-MOV s $x_orig
-INC $another_thing
-INC $x_size
-INC $y_size
-JMP loop
-HLT
-	
+MOV 000 $plasma.y_start
+MOV 480 $plasma.y_size
+ADD $plasma.y_start $plasma.y_size
+MOV s $plasma.y_end
 
-//x
-//y
-#plasma.NoisyFunction
-	@noisy.x_pos
-	@noisy.y_pos
-	MOV s $noisy.x_pos
-	MOV s $noisy.y_pos
-	//MOV $noisy.x_pos s
-	MOV $noise_x_offs s
-	JSR std.math.Sin
-	
-	ADD s $noisy.x_pos
-	JSR std.math.Sin
-	MOV s x
-	MOV $noisy.y_pos s
-	MUL s 1
-	JSR std.math.Sin
-	ADD s x
-	MUL s $factor_thing
-	DIV s 510
-	ADD s $factor_thing
+JSR plasma.ComputeColorTable
+JSR plasma.GenerateLookupTable
+MOV 1 $plasma.d
+MOV 0 $plasma.step
+MOV 0  $plasma.phase
+JSR graphics.Clear
+#laupozarus
+	JSR plasma.StepOnce
+	ADD $plasma.step 5
+	MOV s $plasma.step
+	JSR graphics.Update
+
+JMP laupozarus
+
+
+#plasma.StepOnce
+	MOV 0xABCD y
+	MOV $plasma.x_start $plasma.x_pos
+	MOV $plasma.y_start $plasma.y_pos
+	#plasma.Step.outer_loop
+		#plasma.Step.inner_loop
+			JSR plasma.GetColor
+
+				MUL $plasma.y_pos std.screen.width
+				ADD $plasma.x_pos std.screen.start
+				ADD s s
+				MOV $std.screen.color $s
+
+
+			INC $plasma.x_pos
+			SEQ $plasma.x_pos $plasma.x_end
+				JMP plasma.Step.inner_loop
+		INC $plasma.y_pos
+		MOV $plasma.x_start $plasma.x_pos
+		SEQ $plasma.y_pos $plasma.y_end
+			JMP plasma.Step.outer_loop
 	RET
 
 
+#plasma.GetColor
+	!plasma.max_value = 1792
+	@plasma.d
+	@plasma.freq
+	MUL $plasma.y_pos std.screen.width
+	ADD s $plasma.x_pos
+	ADD s plasma.lookup_table
+	MOV $s s							//get shit in lookup table
+
+	MUL $plasma.step 2
+	ADD s $plasma.x_pos
+			MOD s 360
+			ADD s std.math.sin_table
+			MOV $s s
+	MUL s 3
+
+	MUL 5 $plasma.step
+	ADD s $plasma.x_pos
+	MUL s 2
+	ADD s $plasma.y_pos
+			MOD s 360
+			ADD s std.math.sin_table
+			MOV $s s
+
+	ADD s s
+	ADD s s
+
+	MUL s 48
+	DIV s plasma.max_value
+			MOV s x				//INLINED
+			MOV x s
+			SGR x 0
+			MUL s -1
+	ADD s plasma.color_table
+	MOV $s $std.screen.color
+
+	RET
+
+
+#plasma.GenerateLookupTable
+	MOV 0x7AB1E y
+	MOV 0xFFF $std.screen.color
+	@plasma.GenerateLookupTable.x_pos
+	@plasma.GenerateLookupTable.y_pos
+	MOV 0 $plasma.GenerateLookupTable.y_pos
+	MOV 0 $plasma.GenerateLookupTable.x_pos
+	#plasma.GenerateLookupTable.outer_loop
+		#plasma.GenerateLookupTable.inner_loop
+
+			JSR plasma.GenerateLookupTable.StaticFunction
+			MOV s x
+
+			MUL $plasma.GenerateLookupTable.y_pos std.screen.width
+			ADD s $plasma.GenerateLookupTable.x_pos
+			ADD s plasma.lookup_table
+			MOV x $s
+
+
+			MOV x $std.screen.color
+			MOV $plasma.GenerateLookupTable.y_pos s
+			MOV $plasma.GenerateLookupTable.x_pos s
+			JSR graphics.PutPixel
+			JSR graphics.Update
+
+
+			INC $plasma.GenerateLookupTable.x_pos
+			SEQ $plasma.GenerateLookupTable.x_pos std.screen.width
+				JMP plasma.GenerateLookupTable.inner_loop
+		MOV 0 $plasma.GenerateLookupTable.x_pos
+		INC $plasma.GenerateLookupTable.y_pos
+		SEQ $plasma.GenerateLookupTable.y_pos std.screen.height
+			JMP plasma.GenerateLookupTable.outer_loop
+	RET
+
+
+
+
+	#plasma.GenerateLookupTable.StaticFunction
+		MUL $plasma.GenerateLookupTable.x_pos 3
+		JSR std.math.Sin
+
+		MUL $plasma.GenerateLookupTable.y_pos 3
+		ADD s 90
+		JSR std.math.Sin
+
+		MUL 2 $plasma.y_pos
+		MUL 2 $plasma.x_pos
+		ADD s s
+		JSR std.math.Sin
+
+		ADD s s
+		ADD s s
+		RET
+
+
+
+
+
+#plasma.ComputeColorTable
+	@plasma.ComputeColorTable.index
+	MOV 0 $plasma.ComputeColorTable.index
+	#plasma.ComputeColorTable.loop
+
+		SGR $plasma.ComputeColorTable.index 15
+			JMP plasma.ComputeColorTable.less_then_16
+
+		SGR $plasma.ComputeColorTable.index 31
+			JMP plasma.ComputeColorTable.less_then_32
+
+		SGR $plasma.ComputeColorTable.index 47
+			JMP plasma.ComputeColorTable.less_then_48
+
+		RET
+
+		#plasma.ComputeColorTable.less_then_16
+			ADD $plasma.ComputeColorTable.index plasma.color_table
+			MOD $plasma.ComputeColorTable.index 16
+			SFT s 8
+			MOV s $s
+			INC $plasma.ComputeColorTable.index
+			JMP plasma.ComputeColorTable.loop
+
+
+		#plasma.ComputeColorTable.less_then_32
+			ADD $plasma.ComputeColorTable.index plasma.color_table
+			MOD $plasma.ComputeColorTable.index 16
+			SFT s 4
+			OOR s 0xF00
+			MOV s $s
+			INC $plasma.ComputeColorTable.index
+			JMP plasma.ComputeColorTable.loop
+
+		#plasma.ComputeColorTable.less_then_48
+			ADD $plasma.ComputeColorTable.index plasma.color_table
+			MOD $plasma.ComputeColorTable.index 16
+			OOR s 0xFF0
+			MOV s $s
+			INC $plasma.ComputeColorTable.index
+			JMP plasma.ComputeColorTable.loop
