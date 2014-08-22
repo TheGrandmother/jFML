@@ -47,7 +47,7 @@ public class VFml extends JFrame implements KeyListener{
 	
 	public static  void main(String[] args) {
 		VFml fml = new VFml();
-		boolean big_dbg = true;
+		boolean big_dbg = false;
 		long dbg_time = System.currentTimeMillis();
 		long elapsed_time = 1;
 		long prev_cycles = 0;

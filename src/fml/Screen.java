@@ -59,11 +59,11 @@ public class Screen extends Canvas {
 		int j = 0;
 
 		for (int i = 0; i < bitmap.length; i++) {
-			if (bitmap[i] >= 0x0000_0FFF) {
+			/*if (bitmap[i] >= 0x0000_0FFF) {
 				temp[j] = 0x0000_00FF;
 				temp[j + 1] = 0x0000_00FF;
 				temp[j + 2] = 0x0000_00FF;
-			} else if(bitmap[i] < 0){
+			} else*/ if(bitmap[i] < 0){
 				temp[j] = 0x0000_0000;
 				temp[j + 1] = 0x0000_0000;
 				temp[j + 2] = 0x0000_0000;

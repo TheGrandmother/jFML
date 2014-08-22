@@ -1,6 +1,9 @@
 //This is a halfdone graphics library.
 < std.constants.asm
 < std.asm
+NOP
+< std.io.asm
+NOP
 #graphics.INIT
 MOV 0xBABE y
 JSR graphics.UpdateAndWait
@@ -302,7 +305,7 @@ HLT
 		JMP graphics.DrawSprite.outer_loop
 
 
-//sprite_address
+//sprite_address  <- top
 //x0
 //y0
 //width
@@ -380,11 +383,15 @@ HLT
 			SNE x 0										//Dont draw if black
 				JMP graphics.DrawScaledSprite.skip
 
-			MOV x $std.screen.color
+			//MOV x $std.screen.color
 
 			ADD $graphics.DrawScaledSprite.y_pos $graphics.DrawScaledSprite.y0
+			MUL s std.screen.width
 			ADD $graphics.DrawScaledSprite.x_pos $graphics.DrawScaledSprite.x0
-			JSR graphics.QuickPutPixel
+			ADD s s
+			ADD s std.screen.start
+			MOV x $s
+			//JSR graphics.QuickPutPixel
 			//JSR graphics.UpdateAndWait
 
 			#graphics.DrawScaledSprite.skip
@@ -427,6 +434,7 @@ HLT
 	MOV s $graphics.Line.x1
 	MOV s $graphics.Line.y1
 
+
 	SUB $graphics.Line.x1 $graphics.Line.x0
 	JSR std.Abs
 	MOV s $graphics.Line.dx 				//dx = abs(x1-x0)
@@ -447,6 +455,14 @@ HLT
 	MOV s $graphics.Line.err				//err := dx-dy
 
 	#graphics.Line.loop
+
+		MOV 123456 s
+		JSR std.io.PrintDecimal
+		JSR std.io.NewLine
+		JSR graphics.UpdateAndWait
+
+		//Do bounds checkign
+		// This should preferably be moved outside of the loop.
 		SGR $graphics.Line.x0 -1			// must skip on 0
 			RET
 
@@ -459,9 +475,13 @@ HLT
 		SLE $graphics.Line.y0 std.screen.height
 			RET
 
-		MOV $graphics.Line.y0 s
-		MOV $graphics.Line.x0 s
-		JSR graphics.QuickPutPixel			//No need for boundcheks
+		//MOV $graphics.Line.y0 s
+		//MOV $graphics.Line.x0 s
+		//JSR graphics.QuickPutPixel			//No need for boundcheks
+		MUL $graphics.Line.y0 std.screen.width
+		ADD s std.screen.start
+		ADD s $graphics.Line.x0
+		MOV $std.screen.color $s
 
 		SUB $graphics.Line.y1 $graphics.Line.y0
 		SUB $graphics.Line.x1 $graphics.Line.x0

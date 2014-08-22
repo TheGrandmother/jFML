@@ -2,15 +2,11 @@
 < std.asm
 < graphics.asm
 
-
 @cloud.step
 @cloud.max_step
 @cloud.color_table+48
 @cloud.x_pos
 @cloud.y_pos
-
-
-
 
 JSR graphics.Clear
 JSR cloud.ComputeTable
@@ -18,12 +14,10 @@ MOV 0 $cloud.step
 MOV 1000 $cloud.max_step
 #liup
 JSR cloud.DoWalk
-JSR graphics.UpdateAndWait
+MOV 0 $cloud.step
+
 JMP liup
 HLT
-
-
-
 
 #cloud.DoWalk
 	MOV 0 $cloud.step
@@ -42,7 +36,7 @@ HLT
 		MOV $cloud.y_pos s
 		MOV $cloud.x_pos s
 		JSR graphics.QuickPutPixel
-
+		JSR graphics.UpdateAndWait
 
 		JSR std.Random
 		JSR std.Abs
@@ -69,7 +63,7 @@ HLT
 	@cloud.table
 	MUL $cloud.y_pos std.screen.width
 	ADD s $cloud.x_pos
-	ADD s cloud.color_table
+	ADD s std.screen.start
 	MOV $s $cloud.original
 
 	MUL $cloud.step 48
@@ -78,32 +72,46 @@ HLT
 	MOV $s $cloud.table
 
 	SFT $cloud.original -8
-	SFT $cloud.table -8
-	ADD s s
 	AND s 0x00F
-	SFT s 8
+	SFT $cloud.table -8
+	AND s 0x00F
+	ADD s s
+	MOV s x
+	SLE x 0xF
+		MOV 0xF x
+	SFT x 8
 	OOR s $cloud.new
+	MOV s $cloud.new
 
 	SFT $cloud.original -4
+	AND s 0x00F
 	SFT $cloud.table -4
+	AND s 0x00F
 	ADD s s
-	AND s 0x00F
-	SFT s 4
+	MOV s x
+	SLE x 0xF
+		MOV 0xF x
+	SFT x 4
 	OOR s $cloud.new
+	MOV s $cloud.new
 
-	ADD $cloud.original $cloud.table
+	SFT $cloud.original 0
 	AND s 0x00F
+	SFT $cloud.table 0
+	AND s 0x00F
+	ADD s s
+	MOV s x
+	SLE x 0xF
+		MOV 0xF x
+	SFT x 0
 	OOR s $cloud.new
+	MOV s $cloud.new
+
+
 
 	MOV $cloud.new $std.screen.color
 
 	RET
-
-
-
-
-
-
 
 #cloud.ComputeTable
 	@cloud.ComputeTable.index
@@ -146,27 +154,3 @@ HLT
 			MOV s $s
 			INC $cloud.ComputeTable.index
 			JMP cloud.ComputeTable.loop
-
-
-		#cloud.ComputeTable.skip
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

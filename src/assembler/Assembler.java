@@ -263,12 +263,13 @@ public class Assembler {
 				return;
 			}
 			try {
+				file_map.put(file_name, true);
 				scanFile(file_name);
 
 			} catch (IOException e) {
 				throw new SyntaxError("I/O error: " + e.getMessage());
 			}
-			file_map.put(file_name, true);
+			
 
 			line_number = temp_line_number;
 

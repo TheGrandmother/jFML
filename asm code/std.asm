@@ -26,11 +26,11 @@ MOV s x
 	JMP std.WaitMilli.loop
 	RET
 
-
+//Why this dows not work as it is suppposed to confuses me greatly
 #std.Random
-	//ADD $std.timer_address $std.Random.current
-
-	MUL $std.Random.current std.Random.multiplier
+	ADD $std.timer_address $std.Random.current
+	MUL s std.Random.multiplier
+	//MUL $std.Random.current std.Random.multiplier
 	ADD s std.Random.increment
 	MOD s std.Random.modulo
 	MOV s $std.Random.current
@@ -38,17 +38,6 @@ MOV s x
 	RET
 HLT
 
-//This random function generates random numbers which are
-//equally distributed in a 2D space... and maybe higher dimension
-#std.SafeRandom
-	JSR std.Random
-	DIV s 2
-	JSR std.Random
-	DIV s 2
-	ADD s s
-	MOD s std.Random.modulo
-
-	RET
 
 #std.random.SetSeed
 MOV s $std.Random.current

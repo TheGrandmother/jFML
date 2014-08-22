@@ -30,6 +30,7 @@ MOV 1 $plasma.d
 MOV 0 $plasma.step
 MOV 0  $plasma.phase
 JSR graphics.Clear
+
 #laupozarus
 	JSR plasma.StepOnce
 	ADD $plasma.step 5
@@ -40,17 +41,46 @@ JMP laupozarus
 
 
 #plasma.StepOnce
+	@plasma.StepOnce.temp_x
+	@plasma.StepOnce.temp_y
 	MOV 0xABCD y
 	MOV $plasma.x_start $plasma.x_pos
 	MOV $plasma.y_start $plasma.y_pos
 	#plasma.Step.outer_loop
 		#plasma.Step.inner_loop
-			JSR plasma.GetColor
 
-				MUL $plasma.y_pos std.screen.width
-				ADD $plasma.x_pos std.screen.start
-				ADD s s
-				MOV $std.screen.color $s
+			JSR plasma.GetColor
+			MUL $plasma.y_pos 2
+			MOV s $plasma.StepOnce.temp_y
+			MUL $plasma.x_pos 2
+			MOV s $plasma.StepOnce.temp_x
+
+			MUL $plasma.StepOnce.temp_y std.screen.width
+			ADD $plasma.StepOnce.temp_x std.screen.start
+			ADD s s
+			MOV $std.screen.color $s
+
+			INC $plasma.StepOnce.temp_y
+
+			MUL $plasma.StepOnce.temp_y std.screen.width
+			ADD $plasma.StepOnce.temp_x std.screen.start
+			ADD s s
+			MOV $std.screen.color $s
+
+			INC $plasma.StepOnce.temp_x
+
+			MUL $plasma.StepOnce.temp_y std.screen.width
+			ADD $plasma.StepOnce.temp_x std.screen.start
+			ADD s s
+			MOV $std.screen.color $s
+
+			DEC $plasma.StepOnce.temp_y
+
+			MUL $plasma.StepOnce.temp_y std.screen.width
+			ADD $plasma.StepOnce.temp_x std.screen.start
+			ADD s s
+			MOV $std.screen.color $s
+
 
 
 			INC $plasma.x_pos
@@ -72,26 +102,27 @@ JMP laupozarus
 	ADD s plasma.lookup_table
 	MOV $s s							//get shit in lookup table
 
-	SFT $plasma.step 1
+	MUL $plasma.step 2
 	ADD s $plasma.x_pos
-			MOD s 360
-			ADD s std.math.sin_table
-			MOV $s s
+	MOD s 360
+	ADD s std.math.sin_table
+	MOV $s s
 	MUL s 3
 
 	MUL 5 $plasma.step
 	ADD s $plasma.x_pos
-	SFT s 1
+	MUL s 2
 	ADD s $plasma.y_pos
-			MOD s 360
-			ADD s std.math.sin_table
-			MOV $s s
+	MOD s 360
+	ADD s std.math.sin_table
+	MOV $s s
 
 	ADD s s
 	ADD s s
 
 	MUL s 48
 	DIV s plasma.max_value
+
 	MOV s x				//INLINED
 	MOV x s
 	SGR x 0
@@ -113,11 +144,16 @@ JMP laupozarus
 	#plasma.GenerateLookupTable.outer_loop
 		#plasma.GenerateLookupTable.inner_loop
 
+
+
+
 			MUL $plasma.GenerateLookupTable.y_pos std.screen.width
 			ADD s $plasma.GenerateLookupTable.x_pos
 			ADD s plasma.lookup_table
 			JSR plasma.GenerateLookupTable.StaticFunction
 			MOV s $s
+
+
 
 			INC $plasma.GenerateLookupTable.x_pos
 			SEQ $plasma.GenerateLookupTable.x_pos std.screen.width
@@ -127,6 +163,8 @@ JMP laupozarus
 		SEQ $plasma.GenerateLookupTable.y_pos std.screen.height
 			JMP plasma.GenerateLookupTable.outer_loop
 	RET
+
+
 
 
 	#plasma.GenerateLookupTable.StaticFunction
@@ -145,6 +183,10 @@ JMP laupozarus
 		ADD s s
 		ADD s s
 		RET
+
+
+
+
 
 #plasma.ComputeColorTable
 	@plasma.ComputeColorTable.index
