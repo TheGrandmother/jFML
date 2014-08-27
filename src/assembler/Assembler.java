@@ -17,7 +17,7 @@ import java.util.regex.Pattern;
 import com.sun.corba.se.spi.ior.MakeImmutable;
 
 /**
- * This is an Assembler for the FML machine.
+ * This is an Assembler for the FML machine. I know... the code is messy.
  * 
  * @author TheGrandmother
  * 
@@ -60,7 +60,15 @@ public class Assembler {
 		machinecode_list = new LinkedList<Integer>();
 		current_address = default_start_address;
 	}
-
+	/**
+	 * This is the main function for the assembler. The arguments are as follows:
+	 * input filename
+	 * output filename
+	 * start address (which is never used)
+	 * 
+	 * @param args
+	 * @throws AssemblerError
+	 */
 	public static void main(String[] args) throws AssemblerError {
 
 		Assembler a = new Assembler();
@@ -137,7 +145,15 @@ public class Assembler {
 	static String beautify(String s) {
 		return s.trim().replaceAll("_", "").replaceAll("(//).*", "");
 	}
-
+	
+	/**
+	 * 
+	 * This method scans an assembly file and performs tokenization of the file.
+	 * 
+	 * @param file_name
+	 * @throws IOException
+	 * @throws AssemblerError
+	 */
 	public void scanFile(String file_name) throws IOException, AssemblerError {
 
 		BufferedReader reader = new BufferedReader(new FileReader(file_name));
@@ -223,7 +239,13 @@ public class Assembler {
 				current_file));
 
 	}
-
+	/**
+	 * Parses raw data entries. if the entry is on the form :"...." it will generate a sequence 
+	 * of data tokens for the string.
+	 * 
+	 * @param line
+	 * @throws SyntaxError
+	 */
 	void parseRaw(String line) throws SyntaxError {
 		if (line.contains("\"")) {
 			String text;
@@ -244,23 +266,34 @@ public class Assembler {
 		}
 
 	}
-
+	/**
+	 * 
+	 * Reads a file and checks to see if it is a .asm or a .mem. It will then tokenize the file.
+	 * 
+	 * @param line
+	 * @throws AssemblerError
+	 * @throws SyntaxError
+	 */
 	void readFile(String line) throws AssemblerError, SyntaxError {
 		int temp_line_number;
 
 		String file_name = line.substring(line.indexOf("<") + 1).trim();
 		String extension = file_name.substring(file_name.length() - 4,
 				file_name.length());
-		// System.out.println("Read another file namley: " + file_name);
-		// System.out.println("extension: " + extension);
-		if (file_name != in_name) {
-			file_name = working_directory + file_name;
+
+		//We need to check this because we don't
+		//want to specify the absolute path for every file
+		if (file_name != in_name) {						
+			file_name = working_directory + file_name;	
 		}
 		if (extension.matches("\\.asm")) {
 
 			temp_line_number = line_number;
-			if (file_map.containsKey(file_name)) {
-				return;
+			
+			//Only import each file once since 
+			//the pointers can only be defined once.
+			if (file_map.containsKey(file_name)) {		
+				return;									
 			}
 			try {
 				file_map.put(file_name, true);
@@ -301,7 +334,11 @@ public class Assembler {
 
 		}
 	}
-
+	/**
+	 * this is the big and ugly function wich parses the instructions.
+	 * @param line
+	 * @throws SyntaxError
+	 */
 	void parseInstruction(String line) throws SyntaxError {
 		line = line.trim();
 		String[] arguments = line.split("\\s+");
@@ -634,12 +671,6 @@ public class Assembler {
 					"You can't move stuff to a numeric constant here: \n"
 							+ line);
 		}
-		// if ((operation == 1 || operation == 2)
-		// && !(a1 == 0b0000 || a1 == 0b0001 || a1 == 0b0010)) {
-		// throw new SyntaxError(
-		// "You can only increment/decrement the registers or the stack: "
-		// + line);
-		// }
 
 		instruction = a1;
 		instruction = instruction | (a2 << 4);
@@ -659,6 +690,11 @@ public class Assembler {
 
 	}
 
+	/**
+	 * Checks that each reference has only been defined once
+	 * @param name
+	 * @throws SyntaxError
+	 */
 	void assertUnique(String name) throws SyntaxError {
 		if (pointer_map.containsKey(name)) {
 			throw new SyntaxError("Duplicate reference: " + name
@@ -733,10 +769,6 @@ public class Assembler {
 				} else if (constant_map.containsKey(entry_name)) {
 					machinecode_list.add(constant_map.get(entry_name).value);
 				} else {
-					System.out.println("#############");
-					for (Constant c : constant_map.values()) {
-						c.print();
-					}
 					throw new AssemblerError("Entry " + entry_name
 							+ " has not been defined.");
 				}

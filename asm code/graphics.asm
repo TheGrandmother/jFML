@@ -1,11 +1,10 @@
 //This is a halfdone graphics library.
 < std.constants.asm
 < std.asm
-NOP
 < std.io.asm
-NOP
+
+
 #graphics.INIT
-MOV 0xBABE y
 JSR graphics.UpdateAndWait
 JMP graphics.ESCAPE
 
@@ -80,8 +79,6 @@ HLT
 HLT
 
 
-
-
 #graphics.Clear
 
 	@graphics.Clear.tmp
@@ -92,7 +89,6 @@ HLT
 		SEQ x std.screen.end
 		JMP graphics.Clear.loop
 		RET
-
 
 #graphics.QuickPutPixel
 	//MOV s x
@@ -123,16 +119,16 @@ HLT
 	MOV s $graphics.PutPixel.y_pos
 
 	SLE $graphics.PutPixel.x_pos std.screen.width					//Check that x is in bounds
-		JMP graphics.PutPixel.x_out_of_bounds
+		RET
 
 	SGR $graphics.PutPixel.x_pos 0
-		JMP graphics.PutPixel.x_out_of_bounds
+		RET
 
 	SLE $graphics.PutPixel.y_pos std.screen.height					//Check that y is in bounds
-		JMP graphics.PutPixel.y_out_of_bounds
+		RET
 
 	SGR $graphics.PutPixel.y_pos 0									//Check that y is in bounds
-		JMP graphics.PutPixel.y_out_of_bounds
+		RET
 
 	MUL $graphics.PutPixel.y_pos std.screen.width
 	ADD s $graphics.PutPixel.x_pos
@@ -140,23 +136,17 @@ HLT
 	MOV $std.screen.color $s				//addr = y*width+x
 	RET
 
-	#graphics.PutPixel.x_out_of_bounds
-		RET
-
-	#graphics.PutPixel.y_out_of_bounds
-		RET
-
 
 //X is on top. Y is on bottom
 #graphics.GetPixel
 	MOV s x
 	MOV s y
 	GRT x std.screen.width
-	JOO graphics.PutPixel.x_out_of_bounds
+	JOO graphics.GetPixel.x_out_of_bounds
 	ADD x std.screen.start
 	MOV s x
 	GRT y std.screen.height
-	JOO graphics.PutPixel.y_out_of_bounds
+	JOO graphics.GetPixel.y_out_of_bounds
 	MUL y std.screen.width
 	ADD s x
 	MOV $s s
@@ -417,6 +407,7 @@ HLT
 //y0
 //x1
 //y1
+//Annoying line drawing subroutine which does not draw diagonal lines going up :/
 #graphics.Line
 	@graphics.Line.x0
 	@graphics.Line.y0
@@ -444,7 +435,7 @@ HLT
 	MOV s $graphics.Line.dy					//dy = abs(y1-y0)
 
 	MOV 1 $graphics.Line.sx
-	SLE $graphics.Line.x0 $graphics.Line.x1	//if (x0 < y0) then sx := 1 else sx := -1
+	SLE $graphics.Line.x0 $graphics.Line.x1	//if (x0 < x1) then sx := 1 else sx := -1
 		MOV -1 $graphics.Line.sx
 
 	MOV 1 $graphics.Line.sy
@@ -475,9 +466,6 @@ HLT
 		SLE $graphics.Line.y0 std.screen.height
 			RET
 
-		//MOV $graphics.Line.y0 s
-		//MOV $graphics.Line.x0 s
-		//JSR graphics.QuickPutPixel			//No need for boundcheks
 		MUL $graphics.Line.y0 std.screen.width
 		ADD s std.screen.start
 		ADD s $graphics.Line.x0
@@ -491,6 +479,7 @@ HLT
 
 		MUL $graphics.Line.err 2
 		MOV s $graphics.Line.e2 			// e2 := 2*err
+
 
 		MUL $graphics.Line.dy -1
 		SGR $graphics.Line.e2 s				// if e2 > -dy then
@@ -519,15 +508,6 @@ HLT
 		#graphics.Line.skip2
 
 		JMP graphics.Line.loop
-
-
-
-
-
-
-
-
-
 
 
 

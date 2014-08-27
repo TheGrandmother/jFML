@@ -140,10 +140,6 @@ NOP
 #code.image_start
 < lamp.mem
 
-
-
-
-
 #code.color_table
 :0x300
 :0x400

@@ -18,6 +18,15 @@ import components.Ram;
 import components.Vm;
 import components.Ram.InvalidAddressExcption;
 
+/**
+ * This is the main file for the java implementation of the FML machine. Its a bit messy and ugly.
+ * The user interface good be greatly reworked but I hate writing user interface so time
+ * will tell if ever get around to do it. 
+ * 
+ * @author TheGrandmother
+ *
+ */
+
 @SuppressWarnings("serial")
 public class VFml extends JFrame implements KeyListener{
 
@@ -37,10 +46,6 @@ public class VFml extends JFrame implements KeyListener{
 	boolean tick_once = false;
 	boolean debug = false;
 
-	
-
-	
-	
 	Vm vm;
 	Screen screen;
 	
@@ -74,20 +79,13 @@ public class VFml extends JFrame implements KeyListener{
 				}
 			}	
 		
-		
-		
-		
-		
-		
 	}
 	
 	public VFml (){
 		super();
 		vm = new Vm(memory_size);
-		
-		loadFile("standard/standard.mem", Ram.screen_start);
+
 		loadFile("standard/font.mem", Ram.charset_start);
-		
 		
 		screen = new Screen(screen_width, screen_height, scaling_factor);
 		populateScreen();
@@ -210,6 +208,7 @@ public class VFml extends JFrame implements KeyListener{
 				"tmp.fml", "0" };
 		try {
 			Assembler.main(args);
+			screen.drawScreen();
 		} catch (AssemblerError e1) {
 			error(e1);
 			return;

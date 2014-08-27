@@ -13,32 +13,33 @@ JSR graphics.Clear
 @greets.end
 ! greets.max_age = 26
 ! greets.table_length = 26
-! greets.interval = 7
+! greets.interval = 13
 
-MOV 170 $greets.x_start
-MOV 90 $greets.y_start
-MOV 0 $greets.step
+JMP greets.ESCAPE
+
+#greets.INIT
+	MOV 170 $greets.x_start
+	MOV 90 $greets.y_start
+	MOV 0 $greets.step
+	RET
 
 //JSR greets.PlayScene
 //HLT
 
-#laupi
+#greets.PlayScene
 	JSR greets.DrawTable
 	JSR graphics.UpdateAndWait
 	INC $greets.step
 	MOD $greets.step greets.interval
 	SEQ s 0
-		JMP laupi
+		JMP greets.PlayScene
 	JSR greets.PopulateTable
 	SNE $greets.end 1
-		HLT
-	JMP laupi
+		RET
+	JMP greets.PlayScene
 
 
-JMP laupi
-MOV 29 $greets.age
-JMP laupi
-HLT
+
 
 #greets.PopulateTable
 	@greets.PopulateTable.ascii
@@ -222,25 +223,14 @@ HLT
 
 		RET
 
-
-
-
-
-
-
-
-
-
-
-
-
 #greets.text_start
-: "this is a story all about my life how my world got flipped uppside down"
-: "in west philladelphia born and raised on the playground i was spending most of my days"
-: "i got in one little fight and my mother got scared"
-: "she said you are moving to your uncle and untie in bell air    "
+: "     i have spent all summer working on a machine which no one will ever use     "
+: "i have written almost six thousand lines in an assembly language which no one will ever use     "
+: "and it has been totally awesome          "
+: "greetings goes out to     osaka     tanshinan     radiantx    "
+: "and all the groups in the demo scene which have inspired me          "
+: "the end       "
 NOP
-
 
 ! greets.image_width = 285
 ! greets.image_height = 300
@@ -251,5 +241,9 @@ NOP
 ! greets.map_width = 16
 #greets.map_start
 < glowmap.mem
+NOP
+
+
+#greets.ESCAPE
 
 

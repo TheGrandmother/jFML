@@ -427,6 +427,8 @@ public class Vm {
 			resolveA1();
 			resolveA2();
 			if (a1 == a2) {
+				// For the skip instructions we need to compute the jump distance
+				// based on the next instruction.
 				jumping = true;
 				int next_instruction = ram.read(pc.getAddress()
 						+ increment_offset);

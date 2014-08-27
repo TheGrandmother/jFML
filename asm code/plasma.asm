@@ -13,31 +13,46 @@
 @plasma.step
 @plasma.color_table+50
 !plasma.lookup_table = 0xA00_000	//Let us just pray to Turing that there is no data here
-JSR graphics.Clear
-MOV 000 $plasma.x_start
-MOV 320 $plasma.x_size
-ADD $plasma.x_start $plasma.x_size
-MOV s $plasma.x_end
 
-MOV 000 $plasma.y_start
-MOV 240 $plasma.y_size
-ADD $plasma.y_start $plasma.y_size
-MOV s $plasma.y_end
+JMP plasma.ESCAPE
 
-JSR plasma.ComputeColorTable
-JSR plasma.GenerateLookupTable
-MOV 1 $plasma.d
-MOV 0 $plasma.step
-MOV 0  $plasma.phase
-JSR graphics.Clear
-#laupozarus
-	JSR plasma.StepOnce
-	ADD $plasma.step 5
-	MOV s $plasma.step
-	JSR graphics.Update
+#plasma.INIT
+	MOV 0x800 $std.screen.color
+	MOV std.screen.height s
+	MOV std.screen.width s
+	MOV 0 s
+	MOV 0 s
+	JSR graphics.FillRectangle
 
-JMP laupozarus
+	MOV 0x555 $std.screen.color
+	MOV 350 s
+	MOV 480 s
+	MOV 130 s
+	MOV 140 s
+	JSR graphics.FillRectangle
 
+
+	MOV 150 $plasma.x_start
+	MOV 320 $plasma.x_size
+	ADD $plasma.x_start $plasma.x_size
+	MOV s $plasma.x_end
+
+	MOV 140 $plasma.y_start
+	MOV 200 $plasma.y_size
+	ADD $plasma.y_start $plasma.y_size
+	MOV s $plasma.y_end
+
+	JSR plasma.ComputeColorTable
+	JSR plasma.GenerateLookupTable
+	MOV 1 $plasma.d
+	MOV 0 $plasma.step
+	MOV 0  $plasma.phase
+	RET
+
+	//JSR plasma.StepOnce
+	//ADD $plasma.step 5
+	//MOV s $plasma.step
+	//JSR graphics.Update
 
 #plasma.StepOnce
 	MOV 0xABCD y
@@ -60,6 +75,9 @@ JMP laupozarus
 		MOV $plasma.x_start $plasma.x_pos
 		SEQ $plasma.y_pos $plasma.y_end
 			JMP plasma.Step.outer_loop
+	ADD $plasma.step 5
+	MOV s $plasma.step
+	JSR graphics.Update
 	RET
 
 
@@ -187,3 +205,5 @@ JMP laupozarus
 			MOV s $s
 			INC $plasma.ComputeColorTable.index
 			JMP plasma.ComputeColorTable.loop
+
+#plasma.ESCAPE

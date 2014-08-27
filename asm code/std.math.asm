@@ -1,3 +1,5 @@
+// This is a pretty useless "math" library
+
 ! std.math.max_int = 2147483647
 #std.math.INIT
 
@@ -9,10 +11,10 @@ JMP std.math.ESCAPE
 	@std.math.Sin.tmp
 	MOV s $std.math.Sin.tmp
 	MOD $std.math.Sin.tmp 360
-	SLE $std.math.Sin.tmp 0
-		JMP std.math.Sin.resolve
-	ADD 360 s
-	#std.math.Sin.resolve
+	//SLE $std.math.Sin.tmp 0
+	//	JMP std.math.Sin.resolve
+	//ADD 360 s
+	//#std.math.Sin.resolve
 	ADD s std.math.sin_table
 	MOV $s s
 	RET
@@ -39,7 +41,7 @@ JMP std.math.ESCAPE
 
 
 
-
+< sin.mem
 #std.math.sin_table
 < sin.mem
 #std.math.sin_table_end
