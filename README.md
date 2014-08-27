@@ -5,7 +5,7 @@ A java implementation of the FML machine which i have designed.
 Basic Usage
 -----
 Run the VFml class. 
-Press Ctrl+Alt+A to Assemble and load a file. (cloud.asm is the only working interesting file)
+Press Ctrl+Alt+A to Assemble and load a file.
 Press Ctrl+Alt+S to start the VM.
 Hold Ctrl+Alt+D to see debug information.
 Hold Ctrl+Alt+Q to pause the machine.
