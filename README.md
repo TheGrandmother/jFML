@@ -14,18 +14,18 @@ Hold Ctrl+Alt+Q to pause the machine.
 Short ISA description
 -------
 	Each instruction is a 16-bit word.
-	An instruction may have at most two arguments.<br>
-	An instruction may carry up to two non registry arguments.<br>
-		These will be placed after the instruction in memory.<br>
-		In the case of only one non register argument this will be placed immediately after<br>
-		the instruction. In the case of two non registry arguments the first address after<br>
-		the instruction will be the first argument and the next will be the second.<br>
+	An instruction may have at most two arguments.
+	An instruction may carry up to two non registry arguments.
+		These will be placed after the instruction in memory.
+		In the case of only one non register argument this will be placed immediately after
+		the instruction. In the case of two non registry arguments the first address after
+		the instruction will be the first argument and the next will be the second.
 
-####Instruction encoding bits:<br>
-	0-3.	These specify the second argument(a2)<br>
-	4-7.	These specify the first argument (a1)<br>
-	8-11.	These specify the operation to be done<br>
-	12-15.	These specify the action to be taken.<br>
+####Instruction encoding bits:
+	0-3.	These specify the second argument(a2)
+	4-7.	These specify the first argument (a1)
+	8-11.	These specify the operation to be done
+	12-15.	These specify the action to be taken.
 
 ####Argument encodings:
 	bits 0-1:
@@ -132,13 +132,8 @@ References:<br>
 &nbsp; &nbsp; &nbsp; &nbsp;!&nbsp; &nbsp; &nbsp; &nbsp;These are constants. The place where they are declared will not appear in the output<br>
 <br>
 
-All references except constants can be augmented with a +n. 
-This means that it should reserve that address and the n next addresses.
-EX: #here+100
-Will make sure that the assembler puts nothing but
-zeroes for 100 addresses after the address of the #here label
-
-
+Pointer declarations can be augmented with a + and then a number. This reserves that many addresses after the address given to the pointer.<br>
+So @array+100 will allocate 99 addresses after the address given to the array pointer. This is used for handling arrays.
 
 
 
